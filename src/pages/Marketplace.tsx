@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Grid, List, Heart, MapPin, Briefcase, Clock, User, ShoppingCart, ArrowLeft, Home } from "lucide-react";
+import { Search, Filter, Grid, List, Heart, MapPin, Briefcase, Clock, User, ShoppingCart, ArrowLeft, Home, Star, Eye, MessageCircle, BookOpen, Laptop, Smartphone } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
@@ -115,47 +115,82 @@ const Marketplace = () => {
     return 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop';
   };
 
+  const getTypeIcon = (type: string) => {
+    switch(type) {
+      case 'job':
+      case 'internship':
+        return <Briefcase className="w-4 h-4" />;
+      case 'item':
+        return <ShoppingCart className="w-4 h-4" />;
+      default:
+        return <ShoppingCart className="w-4 h-4" />;
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch(category.toLowerCase()) {
+      case 'technology':
+        return <Laptop className="w-4 h-4" />;
+      case 'electronics':
+        return <Smartphone className="w-4 h-4" />;
+      case 'textbooks':
+        return <BookOpen className="w-4 h-4" />;
+      default:
+        return <ShoppingCart className="w-4 h-4" />;
+    }
+  };
+
+  const quickFilters = [
+    { label: 'All', value: 'all', count: opportunities.length },
+    { label: 'Jobs', value: 'job', count: opportunities.filter(o => o.opportunity_type === 'job').length },
+    { label: 'Internships', value: 'internship', count: opportunities.filter(o => o.opportunity_type === 'internship').length },
+    { label: 'Items', value: 'item', count: opportunities.filter(o => o.opportunity_type === 'item').length },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <div className="min-h-screen bg-gray-50">
+      {/* Modern Header */}
+      <header className="glass-effect sticky top-0 z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleGoBack}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Back</span>
-              </Button>
-              <Link to="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                <Home className="w-5 h-5" />
-                <span className="hidden sm:inline">Home</span>
-              </Link>
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleGoBack}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Back</span>
+                </Button>
+                <div className="h-6 w-px bg-gray-300"></div>
+                <Link to="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl p-2">
+                  <Home className="w-4 h-4" />
+                  <span className="hidden sm:inline">Home</span>
+                </Link>
+              </div>
               <Link to="/" className="flex items-center">
                 <Logo size="sm" />
               </Link>
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <Link to="/marketplace" className="text-gray-700 hover:text-blue-600 font-medium">
+              <Link to="/marketplace" className="nav-link active">
                 Marketplace
               </Link>
               {user && (
-                <Link to="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">
+                <Link to="/dashboard" className="nav-link">
                   Dashboard
                 </Link>
               )}
             </div>
 
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-3">
               {user ? (
                 <>
                   <Link to="/dashboard">
-                    <Button variant="outline" size="sm" className="text-xs sm:text-sm border-blue-600 text-blue-600">
+                    <Button variant="outline" size="sm" className="border-blue-600 text-blue-600 hover:bg-blue-50 rounded-xl">
                       Dashboard
                     </Button>
                   </Link>
@@ -163,7 +198,7 @@ const Marketplace = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={handleSignOut}
-                    className="text-xs sm:text-sm"
+                    className="rounded-xl hover:bg-gray-100"
                   >
                     Sign Out
                   </Button>
@@ -171,12 +206,12 @@ const Marketplace = () => {
               ) : (
                 <>
                   <Link to="/auth">
-                    <Button variant="outline" size="sm" className="text-xs sm:text-sm border-blue-600 text-blue-600">
+                    <Button variant="outline" size="sm" className="border-blue-600 text-blue-600 hover:bg-blue-50 rounded-xl">
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/auth">
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm">
+                    <Button size="sm" className="btn-premium text-sm">
                       Join StuFind
                     </Button>
                   </Link>
@@ -187,119 +222,158 @@ const Marketplace = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Student Marketplace for Jobs & Items
-          </h1>
-          <p className="text-lg text-gray-600 mb-6">
-            Discover opportunities, find what you need, and connect with students across Ghana
-          </p>
+        <div className="relative mb-12 overflow-hidden rounded-3xl">
+          <div className="custom-gradient-1 p-8 md:p-12 text-white">
+            <div className="relative z-10">
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                Discover. Connect. Grow.
+              </h1>
+              <p className="text-xl opacity-90 mb-6 max-w-2xl">
+                Your gateway to opportunities across Ghana's top universities
+              </p>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span>Live Opportunities</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                  <Star className="w-4 h-4" />
+                  <span>Verified Students Only</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+                  <Shield className="w-4 h-4" />
+                  <span>Secure Transactions</span>
+                </div>
+              </div>
+            </div>
+            <div className="absolute right-0 top-0 w-1/3 h-full opacity-20">
+              <div className="geometric-bg w-full h-full"></div>
+            </div>
+          </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6 sm:mb-8 border border-slate-200">
-          <div className="flex flex-col gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+        {/* Enhanced Search Section */}
+        <div className="card-float p-6 mb-8">
+          <div className="space-y-6">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Search jobs, items, internships..."
+                placeholder="Search for jobs, internships, textbooks, electronics..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 border-slate-200 focus:border-blue-500"
+                className="input-modern pl-12 text-lg h-14"
               />
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-              <Select value={opportunityType} onValueChange={setOpportunityType}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="job">Jobs</SelectItem>
-                  <SelectItem value="internship">Internships</SelectItem>
-                  <SelectItem value="item">Items</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={university} onValueChange={setUniversity}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="University" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Universities</SelectItem>
-                  <SelectItem value="University of Ghana (UG)">University of Ghana</SelectItem>
-                  <SelectItem value="Kwame Nkrumah University of Science and Technology (KNUST)">KNUST</SelectItem>
-                  <SelectItem value="University of Cape Coast (UCC)">UCC</SelectItem>
-                  <SelectItem value="Ghana Institute of Management and Public Administration (GIMPA)">GIMPA</SelectItem>
-                  <SelectItem value="Ashesi University">Ashesi</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="Technology">Technology</SelectItem>
-                  <SelectItem value="Business">Business</SelectItem>
-                  <SelectItem value="Education">Education</SelectItem>
-                  <SelectItem value="Health">Health</SelectItem>
-                  <SelectItem value="Arts & Creative">Arts & Creative</SelectItem>
-                  <SelectItem value="Engineering">Engineering</SelectItem>
-                  <SelectItem value="Finance">Finance</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Electronics">Electronics</SelectItem>
-                  <SelectItem value="Textbooks">Textbooks</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex border rounded-lg border-slate-200">
+            {/* Quick Filters */}
+            <div className="flex flex-wrap gap-3">
+              {quickFilters.map((filter) => (
                 <Button
-                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  key={filter.value}
+                  variant={opportunityType === filter.value ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setViewMode("grid")}
-                  className={viewMode === "grid" ? "bg-blue-600 hover:bg-blue-700" : ""}
+                  onClick={() => setOpportunityType(filter.value)}
+                  className={`rounded-full ${
+                    opportunityType === filter.value 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'hover:bg-blue-50 hover:text-blue-600'
+                  }`}
                 >
-                  <Grid className="w-4 h-4" />
+                  {filter.label} ({filter.count})
                 </Button>
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className={viewMode === "list" ? "bg-blue-600 hover:bg-blue-700" : ""}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
+              ))}
+            </div>
+            
+            {/* Advanced Filters */}
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              <div className="flex flex-wrap gap-3 flex-1">
+                <Select value={university} onValueChange={setUniversity}>
+                  <SelectTrigger className="w-48 rounded-xl border-gray-200">
+                    <SelectValue placeholder="University" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Universities</SelectItem>
+                    <SelectItem value="University of Ghana (UG)">University of Ghana</SelectItem>
+                    <SelectItem value="Kwame Nkrumah University of Science and Technology (KNUST)">KNUST</SelectItem>
+                    <SelectItem value="University of Cape Coast (UCC)">UCC</SelectItem>
+                    <SelectItem value="Ghana Institute of Management and Public Administration (GIMPA)">GIMPA</SelectItem>
+                    <SelectItem value="Ashesi University">Ashesi</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="w-40 rounded-xl border-gray-200">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="Technology">Technology</SelectItem>
+                    <SelectItem value="Business">Business</SelectItem>
+                    <SelectItem value="Education">Education</SelectItem>
+                    <SelectItem value="Health">Health</SelectItem>
+                    <SelectItem value="Arts & Creative">Arts & Creative</SelectItem>
+                    <SelectItem value="Engineering">Engineering</SelectItem>
+                    <SelectItem value="Finance">Finance</SelectItem>
+                    <SelectItem value="Marketing">Marketing</SelectItem>
+                    <SelectItem value="Electronics">Electronics</SelectItem>
+                    <SelectItem value="Textbooks">Textbooks</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-40 rounded-xl border-gray-200">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-500">View:</span>
+                <div className="flex bg-gray-100 rounded-xl p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                    className={`rounded-lg ${viewMode === "grid" ? "bg-white shadow-sm" : ""}`}
+                  >
+                    <Grid className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setViewMode("list")}
+                    className={`rounded-lg ${viewMode === "list" ? "bg-white shadow-sm" : ""}`}
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Results Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl sm:text-2xl font-semibold text-slate-900">
-            Available Opportunities ({opportunities.length})
-          </h2>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Available Opportunities
+            </h2>
+            <p className="text-gray-600 mt-1">
+              {opportunities.length} {opportunities.length === 1 ? 'result' : 'results'} found
+            </p>
+          </div>
           {user && (
             <Link to="/dashboard?tab=post">
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="btn-premium">
                 Post Opportunity
               </Button>
             </Link>
@@ -308,128 +382,186 @@ const Marketplace = () => {
 
         {/* Loading State */}
         {loading && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading opportunities...</p>
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Finding opportunities...</p>
+            </div>
           </div>
         )}
 
-        {/* Items Grid */}
+        {/* Items Grid/List */}
         {!loading && opportunities.length > 0 && (
-          <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" : "space-y-4"}>
+          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
             {opportunities.map((item) => (
-              <Card key={item.id} className="hover:shadow-xl transition-all duration-300 cursor-pointer group border-slate-200">
+              <Card key={item.id} className="card-float cursor-pointer group">
                 {viewMode === "grid" ? (
                   <>
                     <CardHeader className="p-0">
-                      <div className="relative aspect-square bg-slate-100 rounded-t-lg overflow-hidden">
+                      <div className="relative aspect-video bg-gray-100 rounded-t-2xl overflow-hidden">
                         <img 
                           src={item.image_url || getDefaultImage(item.opportunity_type)} 
                           alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+                          className="absolute top-3 right-3 bg-white/90 hover:bg-white shadow-lg rounded-xl"
                         >
-                          <Heart className="w-4 h-4" />
+                          <Heart className="w-4 h-4 text-gray-600" />
                         </Button>
-                        <Badge className="absolute top-2 left-2 bg-blue-600 text-white text-xs">
-                          {item.university || 'All Universities'}
-                        </Badge>
+                        
+                        <div className="absolute top-3 left-3 flex gap-2">
+                          <Badge className={`${
+                            item.opportunity_type === 'job' ? 'bg-blue-600 text-white' :
+                            item.opportunity_type === 'internship' ? 'bg-purple-600 text-white' :
+                            'bg-green-600 text-white'
+                          } badge-glow`}>
+                            {getTypeIcon(item.opportunity_type)}
+                            <span className="ml-1">
+                              {item.opportunity_type === 'job' ? 'Job' : 
+                               item.opportunity_type === 'internship' ? 'Internship' : 'For Sale'}
+                            </span>
+                          </Badge>
+                        </div>
+
+                        <div className="absolute bottom-3 left-3">
+                          <Badge variant="secondary" className="bg-white/90 text-gray-700 backdrop-blur-sm">
+                            {item.university?.split('(')[0] || 'All Universities'}
+                          </Badge>
+                        </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
-                          {item.opportunity_type === 'job' ? 'Job' : item.opportunity_type === 'internship' ? 'Internship' : 'Item'}
-                        </Badge>
-                        {item.opportunity_type !== 'item' && (
-                          <Briefcase className="w-3 h-3 text-gray-400" />
-                        )}
-                        {item.opportunity_type === 'item' && (
-                          <ShoppingCart className="w-3 h-3 text-gray-400" />
-                        )}
+                    
+                    <CardContent className="p-5">
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <h3 className="font-semibold text-gray-900 text-lg leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
+                            {item.title}
+                          </h3>
+                        </div>
+                        
+                        <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
+                          {item.description}
+                        </p>
+                        
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            <span className="truncate">{item.location}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {getCategoryIcon(item.category)}
+                            <span className="truncate">{item.category}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>Posted {formatDate(item.created_at)}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            <span>124 views</span>
+                          </div>
+                        </div>
                       </div>
-                      <h4 className="font-semibold text-slate-900 mb-2 line-clamp-2 text-sm sm:text-base">{item.title}</h4>
-                      <p className="text-xs sm:text-sm text-slate-500 mb-2 line-clamp-2">{item.description}</p>
-                      <div className="flex items-center text-xs sm:text-sm text-slate-500 mb-1">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        <span className="truncate">{item.location}</span>
-                      </div>
-                      <p className="text-xs text-slate-400">Posted {formatDate(item.created_at)}</p>
                     </CardContent>
-                    <CardFooter className="p-3 sm:p-4 pt-0">
+                    
+                    <CardFooter className="p-5 pt-0">
                       <div className="flex justify-between items-center w-full">
                         <div>
-                          <span className="text-lg sm:text-2xl font-bold text-green-600">
-                            {item.currency} {item.price}
-                            {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? '/mo' : ''}
+                          <span className="text-2xl font-bold text-gray-900">
+                            {item.currency} {item.price.toLocaleString()}
                           </span>
-                          <p className="text-xs sm:text-sm text-slate-500">
-                            {item.category}
-                          </p>
+                          {(item.opportunity_type === 'job' || item.opportunity_type === 'internship') && (
+                            <span className="text-sm text-gray-500 ml-1">/month</span>
+                          )}
                         </div>
                         <Link to={`/product/${item.id}`}>
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm">
-                            {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? 'Apply' : 'View'}
+                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? 'Apply Now' : 'View Details'}
                           </Button>
                         </Link>
                       </div>
                     </CardFooter>
                   </>
                 ) : (
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 relative">
+                  <CardContent className="p-5">
+                    <div className="flex gap-5">
+                      <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative">
                         <img 
                           src={item.image_url || getDefaultImage(item.opportunity_type)} 
                           alt={item.title}
                           className="w-full h-full object-cover"
                         />
-                        <Badge className="absolute top-1 left-1 bg-blue-600 text-white text-xs">
-                          {item.university || 'All'}
+                        <Badge className={`absolute top-1 left-1 text-xs ${
+                          item.opportunity_type === 'job' ? 'bg-blue-600 text-white' :
+                          item.opportunity_type === 'internship' ? 'bg-purple-600 text-white' :
+                          'bg-green-600 text-white'
+                        }`}>
+                          {item.opportunity_type === 'job' ? 'Job' : 
+                           item.opportunity_type === 'internship' ? 'Int' : 'Sale'}
                         </Badge>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold text-slate-900 text-sm sm:text-base line-clamp-1">{item.title}</h4>
-                          <Button size="sm" variant="ghost" className="flex-shrink-0">
+                      
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-semibold text-gray-900 text-lg line-clamp-1 group-hover:text-blue-600 transition-colors">
+                            {item.title}
+                          </h3>
+                          <Button size="sm" variant="ghost" className="flex-shrink-0 rounded-lg">
                             <Heart className="w-4 h-4" />
                           </Button>
                         </div>
-                        <div className="flex gap-2 mb-2">
-                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
-                            {item.opportunity_type === 'job' ? 'Job' : item.opportunity_type === 'internship' ? 'Internship' : 'Item'}
-                          </Badge>
+                        
+                        <div className="flex flex-wrap gap-2">
                           <Badge variant="outline" className="text-xs">
                             {item.category}
                           </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {item.university?.split('(')[0] || 'All Universities'}
+                          </Badge>
                         </div>
-                        <p className="text-xs sm:text-sm text-slate-600 mb-2 line-clamp-1">{item.description}</p>
-                        <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-slate-500 mb-2">
-                          <span className="flex items-center">
-                            <MapPin className="w-3 h-3 mr-1" />
+                        
+                        <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
+                          {item.description}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-4 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
                             {item.location}
                           </span>
-                          <span className="flex items-center">
-                            <Clock className="w-3 h-3 mr-1" />
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
                             {formatDate(item.created_at)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            124 views
                           </span>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <span className="text-lg sm:text-2xl font-bold text-green-600">
-                          {item.currency} {item.price}
-                          {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? '/mo' : ''}
-                        </span>
-                        <div className="mt-2">
-                          <Link to={`/product/${item.id}`}>
-                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm">
-                              {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? 'Apply Now' : 'View Details'}
-                            </Button>
-                          </Link>
+                      
+                      <div className="text-right flex-shrink-0 space-y-3">
+                        <div>
+                          <span className="text-xl font-bold text-gray-900">
+                            {item.currency} {item.price.toLocaleString()}
+                          </span>
+                          {(item.opportunity_type === 'job' || item.opportunity_type === 'internship') && (
+                            <div className="text-xs text-gray-500">/month</div>
+                          )}
                         </div>
+                        <Link to={`/product/${item.id}`}>
+                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 rounded-xl w-full">
+                            {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? 'Apply' : 'View'}
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   </CardContent>
@@ -441,19 +573,21 @@ const Marketplace = () => {
 
         {/* Empty State */}
         {!loading && opportunities.length === 0 && (
-          <div className="text-center py-12">
-            <div className="mb-4">
-              <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">No opportunities found</h3>
-              <p className="text-gray-500 mb-6">
+          <div className="text-center py-20">
+            <div className="card-float p-12 max-w-md mx-auto">
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Search className="w-10 h-10 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-600 mb-3">No opportunities found</h3>
+              <p className="text-gray-500 mb-6 leading-relaxed">
                 {searchQuery || category !== 'all' || opportunityType !== 'all' || university !== 'all'
-                  ? 'Try adjusting your search criteria'
-                  : 'Be the first to post an opportunity!'
+                  ? 'Try adjusting your search criteria or clearing some filters'
+                  : 'Be the first to post an opportunity and start earning!'
                 }
               </p>
               {user && (
                 <Link to="/dashboard?tab=post">
-                  <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Button className="btn-premium">
                     Post First Opportunity
                   </Button>
                 </Link>
@@ -464,8 +598,8 @@ const Marketplace = () => {
 
         {/* Load More */}
         {!loading && opportunities.length > 0 && (
-          <div className="text-center mt-8 sm:mt-12">
-            <Button variant="outline" size="lg" className="border-slate-300 hover:bg-slate-50">
+          <div className="text-center mt-12">
+            <Button variant="outline" size="lg" className="border-gray-300 hover:bg-gray-50 rounded-xl px-8 py-3">
               Load More Opportunities
             </Button>
           </div>
