@@ -283,7 +283,7 @@ const Index = () => {
                       {item.price}
                       {(item.type === 'job' || item.type === 'internship') && <span className="text-sm font-normal text-gray-500">/month</span>}
                     </span>
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <Button size="sm" className="btn-warm text-white shadow-lg">
                       {item.type === 'item' ? 'View' : 'Apply'}
                     </Button>
                   </div>
