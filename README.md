@@ -162,3 +162,5 @@ If you have any questions or need help, please:
 ---
 
 **Made with ❤️ for students everywhere**
+
+*Last updated: December 2024*
