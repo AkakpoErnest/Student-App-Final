@@ -206,7 +206,7 @@ const Marketplace = () => {
               ) : (
                 <>
                   <Link to="/auth">
-                    <Button variant="outline" size="sm" className="border-blue-600 text-blue-600 hover:bg-blue-50 rounded-xl">
+                    <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 rounded-xl">
                       Sign In
                     </Button>
                   </Link>
