@@ -293,7 +293,7 @@ const Index = () => {
           </div>
 
           <div className="text-center mt-12">
-            <Button asChild size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-3 rounded-xl">
+            <Button asChild size="lg" variant="outline" className="border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white px-8 py-3 rounded-xl shadow-lg">
               <Link to="/marketplace">
                 View All 2,847+ Items
                 <ArrowRight className="ml-2 w-5 h-5" />
