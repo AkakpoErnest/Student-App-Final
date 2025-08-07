@@ -114,7 +114,7 @@ const Index = () => {
             </nav>
             <div className="flex items-center space-x-4">
               <ThemeToggle />
-              <Button asChild variant="ghost" className="hidden sm:inline-flex text-gray-700 hover:text-blue-600">
+              <Button asChild variant="ghost" className="hidden sm:inline-flex text-gray-700 hover:text-orange-600">
                 <Link to="/auth">Sign In</Link>
               </Button>
               <Button asChild className="btn-premium shadow-lg">
