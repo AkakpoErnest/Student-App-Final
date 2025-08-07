@@ -147,15 +147,15 @@ const Index = () => {
                       Connect with fellow students, discover opportunities, and trade safely on Ghana's first blockchain-powered student platform.
                     </p>
                     <div className="flex flex-wrap gap-3">
-                      <Badge className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
+                      <Badge className="badge-nature px-3 py-1">
                         <CheckCircle className="w-4 h-4 mr-1" />
                         Student Verified
                       </Badge>
-                      <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-3 py-1">
+                      <Badge className="badge-warm px-3 py-1">
                         <Shield className="w-4 h-4 mr-1" />
                         Secure Payments
                       </Badge>
-                      <Badge className="bg-purple-100 text-purple-700 border-purple-200 px-3 py-1">
+                      <Badge className="badge-cool px-3 py-1">
                         <Coins className="w-4 h-4 mr-1" />
                         Earn Tokens
                       </Badge>
