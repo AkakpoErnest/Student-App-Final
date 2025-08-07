@@ -139,7 +139,7 @@ const Index = () => {
                 <div>
                   <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 leading-tight">
                     <span className="block">Ghana's</span>
-                    <span className="block text-blue-600">Student</span>
+                    <span className="block text-gradient">Student</span>
                     <span className="block">Marketplace</span>
                   </h1>
                   <div className="mt-6 space-y-4">
