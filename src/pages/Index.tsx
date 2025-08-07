@@ -417,7 +417,7 @@ const Index = () => {
           <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
             Ready to Join Ghana's Student Economy?
           </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
             Whether you're looking for opportunities or have something to sell, StuFind connects you with the right people.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
