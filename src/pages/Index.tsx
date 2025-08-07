@@ -371,7 +371,7 @@ const Index = () => {
                     <div>
                       <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
                       <p className="text-sm text-gray-500">{testimonial.role}</p>
-                      <p className="text-sm text-blue-600">{testimonial.university}</p>
+                      <p className="text-sm text-orange-600">{testimonial.university}</p>
                     </div>
                   </div>
                 </CardContent>
