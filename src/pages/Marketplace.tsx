@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Grid, List, Heart, MapPin, Briefcase, Clock, User, ShoppingCart, ArrowLeft, Home, Star, Eye, MessageCircle, BookOpen, Laptop, Smartphone } from "lucide-react";
+import { Search, Filter, Grid, List, Heart, MapPin, Briefcase, Clock, User, ShoppingCart, ArrowLeft, Home, Star, Eye, MessageCircle, BookOpen, Laptop, Smartphone, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
