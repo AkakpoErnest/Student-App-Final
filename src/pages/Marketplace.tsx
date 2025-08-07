@@ -483,9 +483,9 @@ const Marketplace = () => {
                           )}
                         </div>
                         <Link to={`/product/${item.id}`}>
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg hover:shadow-xl transition-all">
-                            {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? 'Apply Now' : 'View Details'}
-                          </Button>
+                          <Button size="sm" className="btn-warm rounded-xl shadow-lg hover:shadow-xl transition-all">
+                          {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? 'Apply Now' : 'View Details'}
+                        </Button>
                         </Link>
                       </div>
                     </CardFooter>
