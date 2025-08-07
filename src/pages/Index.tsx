@@ -119,7 +119,7 @@ const Index = () => {
               <Button asChild variant="ghost" className="hidden sm:inline-flex text-gray-700 hover:text-blue-600">
                 <Link to="/auth">Sign In</Link>
               </Button>
-              <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-600/25">
+              <Button asChild className="btn-premium shadow-lg">
                 <Link to="/auth">Join StuFind</Link>
               </Button>
             </div>
