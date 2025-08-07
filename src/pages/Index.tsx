@@ -105,13 +105,11 @@ const Index = () => {
           <div className="flex justify-between items-center h-16">
             <Logo />
             <nav className="hidden md:flex space-x-8">
-              <Link to="/marketplace" className="text-gray-700 hover:text-blue-600 font-medium transition-colors relative group">
+              <Link to="/marketplace" className="nav-link">
                 Marketplace
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
               </Link>
-              <Link to="/how-it-works" className="text-gray-700 hover:text-blue-600 font-medium transition-colors relative group">
+              <Link to="/how-it-works" className="nav-link">
                 How It Works
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
               </Link>
             </nav>
             <div className="flex items-center space-x-4">
