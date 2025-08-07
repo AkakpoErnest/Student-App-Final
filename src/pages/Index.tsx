@@ -327,7 +327,7 @@ const Index = () => {
               <Link
                 key={category.name}
                 to={`/marketplace?category=${category.name}`}
-                className="group text-center p-6 rounded-xl border border-gray-200 hover:border-blue-600 hover:shadow-lg transition-all duration-300"
+                className="group text-center p-6 rounded-xl border border-gray-200 hover:border-orange-500 hover:shadow-lg transition-all duration-300"
               >
                 <div className={`w-16 h-16 ${category.color} rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
                   <category.icon className="w-8 h-8 text-white" />
