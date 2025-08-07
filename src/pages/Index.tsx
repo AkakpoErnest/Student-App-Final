@@ -166,18 +166,17 @@ const Index = () => {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-4 rounded-xl shadow-xl shadow-blue-600/25 relative overflow-hidden group">
+                  <Button asChild size="lg" className="btn-premium text-lg px-8 py-4 rounded-xl shadow-xl">
                     <Link to="/marketplace">
-                      <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                      <span className="relative flex items-center">
+                      <span className="flex items-center">
                         Explore Marketplace
                         <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </span>
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="text-lg px-8 py-4 rounded-xl border-2 border-gray-200 hover:border-blue-600 hover:text-blue-600 relative overflow-hidden group">
+                  <Button asChild variant="outline" size="lg" className="text-lg px-8 py-4 rounded-xl border-2 border-orange-200 hover:border-orange-500 hover:text-orange-600 relative overflow-hidden group">
                     <Link to="/auth">
-                      <span className="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                      <span className="absolute inset-0 bg-orange-50 opacity-0 group-hover:opacity-100 transition-opacity"></span>
                       <span className="relative">Start Selling</span>
                     </Link>
                   </Button>
