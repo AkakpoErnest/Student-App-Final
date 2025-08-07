@@ -421,13 +421,13 @@ const Index = () => {
             Whether you're looking for opportunities or have something to sell, StuFind connects you with the right people.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-blue-50 text-lg px-8 py-4 rounded-xl shadow-xl">
+            <Button asChild size="lg" variant="secondary" className="bg-white text-orange-600 hover:bg-orange-50 text-lg px-8 py-4 rounded-xl shadow-xl">
               <Link to="/auth">
                 Create Free Account
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-4 rounded-xl">
+            <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-orange-600 text-lg px-8 py-4 rounded-xl">
               <Link to="/marketplace">
                 Explore Marketplace
               </Link>
