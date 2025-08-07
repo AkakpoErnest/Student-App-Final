@@ -8,6 +8,7 @@ import { Search, Filter, Grid, List, Heart, MapPin, Briefcase, Clock, User, Shop
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import { toast } from "sonner";
 import Logo from "@/components/Logo";
 
 interface Opportunity {
