@@ -1,0 +1,56 @@
+<<<<<<< HEAD
+# STUDENT-WEB-APP
+Student Market place 
+=======
+# StuFind - Financial Freedom Hub for Students
+
+StuFind is a modern web app that empowers students to find financial opportunities, connect with peers, and earn blockchain-based rewards. Built with React, Vite, Supabase, and Base blockchain integration.
+
+## 🚀 Features
+- Student authentication and profile management
+- Post and browse job, internship, and side-hustle opportunities
+- Blockchain-powered escrow and payments
+- Token rewards for daily activity and email verification
+- University verification and profile picture upload
+- Modern, mobile-friendly UI
+
+## 🎓 Use Cases
+
+**StuFind helps students:**
+
+- **Find Financial Opportunities:**
+  - Browse and apply for jobs, internships, and side hustles posted by other students or organizations.
+  - Post your own opportunities to earn or collaborate with others.
+
+- **Earn Blockchain Rewards:**
+  - Claim daily login bonuses and email verification rewards as tokens on the Base blockchain.
+  - Use tokens for platform perks or future integrations.
+
+- **Secure Transactions:**
+  - Use blockchain escrow for safe payments between students and opportunity posters.
+
+- **Build Your Network:**
+  - Connect with students from your university and beyond.
+  - Showcase your skills and experience with a verified profile.
+
+- **Student Essentials Marketplace:**
+  - Buy and sell student essentials (books, electronics, etc.) in a trusted, student-only environment.
+
+## 🛠️ Tech Stack
+- React + Vite
+- Supabase (auth, database, storage)
+- Base blockchain (escrow, tokens)
+- Tailwind CSS
+
+## Getting Started
+1. Clone the repo
+2. Install dependencies: `npm install`
+3. Set up your Supabase project and environment variables
+4. Run locally: `npm run dev`
+
+## Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+[MIT](LICENSE)
+>>>>>>> master
