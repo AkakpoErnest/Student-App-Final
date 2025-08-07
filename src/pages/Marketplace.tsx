@@ -558,7 +558,7 @@ const Marketplace = () => {
                           )}
                         </div>
                         <Link to={`/product/${item.id}`}>
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 rounded-xl w-full">
+                          <Button size="sm" className="btn-warm rounded-xl w-full">
                             {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? 'Apply' : 'View'}
                           </Button>
                         </Link>
