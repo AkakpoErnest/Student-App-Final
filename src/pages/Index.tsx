@@ -437,12 +437,12 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-16">
+      <footer className="bg-gray-900 dark:bg-black text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
               <Logo className="text-white mb-6" />
-              <p className="text-gray-400 max-w-md mb-6">
+              <p className="text-gray-400 dark:text-gray-300 max-w-md mb-6">
                 Empowering Ghana's students through secure trading, meaningful opportunities, and blockchain-powered rewards.
               </p>
               <div className="flex space-x-4">
