@@ -82,15 +82,11 @@ const Marketplace = () => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Supabase error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+        logSupabaseError('Supabase error fetching opportunities', error);
 
         // Show user-friendly error message
-        toast?.error(`Unable to load opportunities: ${error.message}`);
+        const userMessage = getUserFriendlyErrorMessage(error);
+        toast?.error(`Unable to load opportunities: ${userMessage}`);
 
         // Set sample data as fallback
         setOpportunities(getSampleOpportunities());
