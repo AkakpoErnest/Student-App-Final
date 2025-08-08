@@ -203,11 +203,11 @@ const Index = () => {
                   </div>
                   <div className="space-y-4">
                     {featuredItems.slice(0, 3).map((item, index) => (
-                      <div key={item.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                      <div key={item.id} className="flex items-center space-x-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer">
                         <img src={item.image} alt={item.title} className="w-12 h-12 rounded-lg object-cover" />
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 truncate">{item.title}</h4>
-                          <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{item.title}</h4>
+                          <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
                             <span>{item.university}</span>
                             <span>•</span>
                             <span className="text-green-600 font-medium">{item.price}</span>
