@@ -382,11 +382,11 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 bg-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-blue-600/5"></div>
+      <section className="py-20 bg-white dark:bg-gray-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-600/5 via-cyan-600/5 to-orange-600/5 dark:from-orange-600/10 dark:via-cyan-600/10 dark:to-orange-600/10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               Trusted by Students Across Ghana
             </h2>
           </div>
