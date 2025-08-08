@@ -29,10 +29,10 @@ const Logo = ({ className = '', size = 'md' }: LogoProps) => {
         className={`${iconSizes[size]} rounded-xl shadow-lg bg-white`}
       />
       <div className="flex flex-col">
-        <span className={`font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent ${sizeClasses[size]} leading-tight`}>
+        <span className={`font-bold text-gradient ${sizeClasses[size]} leading-tight`}>
           StuFind
         </span>
-        <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+        <span className="text-xs text-gray-700 dark:text-gray-300 font-medium">
           Students Financial Hub
         </span>
       </div>
