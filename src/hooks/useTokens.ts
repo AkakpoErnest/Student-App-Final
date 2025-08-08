@@ -97,8 +97,9 @@ export const useTokens = (user: User | null) => {
         setUserTokens(data);
       }
     } catch (error) {
-      console.error('Error in fetchUserTokens:', error);
-      toast.error('Failed to load token balance');
+      logSupabaseError('Error in fetchUserTokens', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(`Failed to load token balance: ${userMessage}`);
     }
   };
 
