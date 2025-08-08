@@ -292,7 +292,9 @@ export const useTokens = (user: User | null) => {
         .eq('claim_type', 'daily')
         .eq('claim_date', today);
 
-      console.log('Existing claims check:', { existingClaims, checkError });
+      if (checkError) {
+        logSupabaseError('Existing claims check failed', checkError);
+      }
 
       if (checkError) {
         console.error('Error checking existing claims:', checkError);
@@ -317,7 +319,9 @@ export const useTokens = (user: User | null) => {
         .select()
         .single();
 
-      console.log('Claim insertion result:', { claimData, claimError });
+      if (claimError) {
+        logSupabaseError('Claim insertion failed', claimError);
+      }
 
       if (claimError) {
         console.error('Error inserting claim:', claimError);
@@ -338,7 +342,9 @@ export const useTokens = (user: User | null) => {
         .select()
         .single();
 
-      console.log('Balance update result:', { updateData, updateError });
+      if (updateError) {
+        logSupabaseError('Balance update failed', updateError);
+      }
 
       if (updateError) {
         console.error('Error updating balance:', updateError);
@@ -351,8 +357,9 @@ export const useTokens = (user: User | null) => {
       // Refresh all data to ensure UI is up to date
       await Promise.all([fetchUserTokens(), fetchTodayClaims(), fetchAllTimeClaims()]);
     } catch (error) {
-      console.error('Error claiming daily tokens:', error);
-      toast.error('Failed to claim daily tokens. Please try again.');
+      logSupabaseError('Error claiming daily tokens', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(`Failed to claim daily tokens: ${userMessage}`);
     }
   };
 
@@ -374,7 +381,9 @@ export const useTokens = (user: User | null) => {
         .select()
         .single();
 
-      console.log('Token initialization result:', { data, error });
+      if (error) {
+        logSupabaseError('Token initialization failed', error);
+      }
 
       if (error && error.code !== '23505') { // Ignore unique constraint violations
         console.error('Error initializing tokens:', error);
@@ -400,7 +409,9 @@ export const useTokens = (user: User | null) => {
         .select('count')
         .limit(1);
 
-      console.log('user_tokens table test:', { tokensTest, tokensError });
+      if (tokensError) {
+        logSupabaseError('user_tokens table test failed', tokensError);
+      }
 
       // Test token_claims table
       const { data: claimsTest, error: claimsError } = await supabase
@@ -408,7 +419,9 @@ export const useTokens = (user: User | null) => {
         .select('count')
         .limit(1);
 
-      console.log('token_claims table test:', { claimsTest, claimsError });
+      if (claimsError) {
+        logSupabaseError('token_claims table test failed', claimsError);
+      }
 
       return { tokensError, claimsError };
     } catch (error) {
