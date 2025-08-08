@@ -141,7 +141,9 @@ export const useTokens = (user: User | null) => {
         .select('*')
         .eq('user_id', user.id);
 
-      console.log('All time claims result:', { data, error });
+      if (error) {
+        logSupabaseError('All time claims fetch failed', error);
+      }
 
       if (error) {
         console.error('Error fetching all time claims:', error);
