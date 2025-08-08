@@ -226,8 +226,8 @@ const Auth = () => {
                 <div className="lg:hidden mb-4">
                   <Logo size="lg" />
                 </div>
-                <CardTitle className="text-2xl lg:text-3xl text-gray-900">Get Started</CardTitle>
-                <CardDescription className="text-base text-gray-600">
+                <CardTitle className="text-2xl lg:text-3xl text-gray-900 dark:text-gray-100">Get Started</CardTitle>
+                <CardDescription className="text-base text-gray-600 dark:text-gray-300">
                   Join Ghana's largest student community
                 </CardDescription>
               </CardHeader>
