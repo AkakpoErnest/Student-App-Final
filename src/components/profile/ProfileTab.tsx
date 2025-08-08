@@ -80,8 +80,9 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
         });
       }
     } catch (error: any) {
-      console.error('Error fetching profile:', error);
-      toast.error('Error loading profile');
+      logSupabaseError('Error fetching profile', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(`Error loading profile: ${userMessage}`);
     } finally {
       setLoading(false);
     }
@@ -105,7 +106,9 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
       setEditing(false);
       fetchProfile();
     } catch (error: any) {
-      toast.error(error.message || 'Error updating profile');
+      logSupabaseError('Error updating profile', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(userMessage);
     } finally {
       setSaving(false);
     }
@@ -130,7 +133,9 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
       toast.success('Verification request submitted successfully');
       fetchProfile();
     } catch (error: any) {
-      toast.error(error.message || 'Error submitting verification');
+      logSupabaseError('Error submitting verification', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(userMessage);
     } finally {
       setSaving(false);
     }
@@ -187,7 +192,9 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
       toast.success('Profile picture updated!');
       fetchProfile();
     } catch (error: any) {
-      toast.error(error.message || 'Error uploading profile picture');
+      logSupabaseError('Error uploading profile picture', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(userMessage);
     } finally {
       setAvatarUploading(false);
     }
