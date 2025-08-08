@@ -269,10 +269,10 @@ const Index = () => {
                   </div>
                 </div>
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
                     {item.title}
                   </h3>
-                  <div className="flex items-center text-sm text-gray-500 mb-3">
+                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
                     <MapPin className="w-4 h-4 mr-1" />
                     <span>{item.location}</span>
                     <span className="mx-2">•</span>
