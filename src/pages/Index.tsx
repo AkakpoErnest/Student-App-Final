@@ -128,8 +128,8 @@ const Index = () => {
       {/* Asymmetric Hero Section */}
       <section className="relative pt-8 pb-16 overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-1/3 h-full bg-gradient-to-br from-orange-600/5 via-orange-400/10 to-transparent"></div>
-          <div className="absolute bottom-0 right-0 w-2/3 h-2/3 bg-gradient-to-tl from-cyan-600/5 via-cyan-400/10 to-transparent"></div>
+          <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-orange-600/8 via-orange-400/12 to-transparent"></div>
+          <div className="absolute bottom-0 right-0 w-3/4 h-3/4 bg-gradient-to-tl from-cyan-600/8 via-cyan-400/12 to-transparent"></div>
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
