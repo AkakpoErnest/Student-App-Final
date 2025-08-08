@@ -116,7 +116,9 @@ export const useTokens = (user: User | null) => {
         .eq('user_id', user.id)
         .eq('claim_date', today);
 
-      console.log('Today claims result:', { data, error });
+      if (error) {
+        logSupabaseError('Today claims fetch failed', error);
+      }
 
       if (error) {
         console.error('Error fetching today claims:', error);
