@@ -446,13 +446,13 @@ const Index = () => {
                 Empowering Ghana's students through secure trading, meaningful opportunities, and blockchain-powered rewards.
               </p>
               <div className="flex space-x-4">
-                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer">
+                <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center hover:bg-orange-700 transition-colors cursor-pointer">
                   <span className="text-white font-bold">f</span>
                 </div>
-                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer">
+                <div className="w-10 h-10 bg-cyan-600 rounded-lg flex items-center justify-center hover:bg-cyan-700 transition-colors cursor-pointer">
                   <span className="text-white font-bold">t</span>
                 </div>
-                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer">
+                <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center hover:bg-green-700 transition-colors cursor-pointer">
                   <span className="text-white font-bold">in</span>
                 </div>
               </div>
