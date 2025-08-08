@@ -26,8 +26,16 @@ const Logo = ({ className = '', size = 'md' }: LogoProps) => {
       <img
         src={LOGO_URL}
         alt="StuFind Logo"
-        className={`${iconSizes[size]} rounded-xl shadow-lg bg-white`}
+        className={`${iconSizes[size]} rounded-xl shadow-lg bg-white border-2 border-orange-100`}
+        onError={(e) => {
+          // Fallback if image doesn't exist
+          e.currentTarget.style.display = 'none';
+          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+        }}
       />
+      <div className={`${iconSizes[size]} rounded-xl shadow-lg bg-gradient-to-br from-orange-500 to-cyan-600 flex items-center justify-center hidden`}>
+        <Briefcase className={`w-1/2 h-1/2 text-white`} />
+      </div>
       <div className="flex flex-col">
         <span className={`font-bold text-gradient ${sizeClasses[size]} leading-tight`}>
           StuFind
