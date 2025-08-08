@@ -83,7 +83,9 @@ export const useTokens = (user: User | null) => {
           .select()
           .single();
 
-        console.log('Token creation result:', { newTokens, createError });
+        if (createError) {
+          logSupabaseError('Token creation failed', createError);
+        }
 
         if (createError) {
           console.error('Error creating token record:', createError);
