@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
+import { logSupabaseError, getUserFriendlyErrorMessage } from '@/lib/errorUtils';
 
 interface UserTokens {
   id: string;
