@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
+import { logSupabaseError, getUserFriendlyErrorMessage } from "@/lib/errorUtils";
 
 interface Opportunity {
   id: string;
