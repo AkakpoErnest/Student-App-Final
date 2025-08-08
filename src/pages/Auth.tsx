@@ -161,8 +161,8 @@ const Auth = () => {
                   <Users className="w-6 h-6 text-orange-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Connect & Network</h3>
-                  <p className="text-gray-600">Meet verified students from UG, KNUST, UCC, Ashesi, and GIMPA</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Connect & Network</h3>
+                  <p className="text-gray-600 dark:text-gray-300">Meet verified students from UG, KNUST, UCC, Ashesi, and GIMPA</p>
                 </div>
               </div>
 
