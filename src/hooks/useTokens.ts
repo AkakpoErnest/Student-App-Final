@@ -231,8 +231,9 @@ export const useTokens = (user: User | null) => {
       });
       return true;
     } catch (error) {
-      console.error('Error claiming tokens:', error);
-      toast.error('Failed to claim tokens. Please try again.');
+      logSupabaseError('Error claiming tokens', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(`Failed to claim tokens: ${userMessage}`);
       return false;
     }
   };
