@@ -143,7 +143,7 @@ const Index = () => {
                     <span className="block">Marketplace</span>
                   </h1>
                   <div className="mt-6 space-y-4">
-                    <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <p className="text-lg lg:text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
                       Connect with fellow students, discover opportunities, and trade safely on Ghana's first blockchain-powered student platform.
                     </p>
                     <div className="flex flex-wrap gap-3">
