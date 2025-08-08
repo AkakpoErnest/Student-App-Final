@@ -133,7 +133,7 @@ const Index = () => {
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center min-h-[600px]">
             <div className="lg:col-span-6 xl:col-span-5">
               <div className="space-y-6">
                 <div>
