@@ -171,18 +171,18 @@ const Auth = () => {
                   <Briefcase className="w-6 h-6 text-cyan-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Find Opportunities</h3>
-                  <p className="text-gray-600">Discover jobs, internships, and side hustles perfect for students</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Find Opportunities</h3>
+                  <p className="text-gray-600 dark:text-gray-300">Discover jobs, internships, and side hustles perfect for students</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4 group">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                  <ShoppingCart className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <ShoppingCart className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Buy & Sell</h3>
-                  <p className="text-gray-600">Trade textbooks, electronics, and more with secure transactions</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Buy & Sell</h3>
+                  <p className="text-gray-600 dark:text-gray-300">Trade textbooks, electronics, and more with secure transactions</p>
                 </div>
               </div>
             </div>
