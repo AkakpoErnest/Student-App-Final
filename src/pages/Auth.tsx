@@ -145,12 +145,12 @@ const Auth = () => {
           {/* Left Side - Welcome Content */}
           <div className="hidden lg:flex flex-col justify-center space-y-8 animate-slide-in-left">
             <div>
-              <h1 className="text-4xl xl:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+              <h1 className="text-4xl xl:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-6 leading-tight">
                 Welcome to
                 <span className="block text-warm text-gradient">StuFind</span>
-                <span className="text-3xl xl:text-4xl text-gray-600">Ghana's Student Hub</span>
+                <span className="text-3xl xl:text-4xl text-gray-600 dark:text-gray-300">Ghana's Student Hub</span>
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed mb-8">
+              <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed mb-8">
                 Connect with fellow students, discover amazing opportunities, and trade safely in Ghana's premier student marketplace.
               </p>
             </div>
