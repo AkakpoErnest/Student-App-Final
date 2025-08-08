@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { CheckCircle, Shield, Users, TrendingUp, ArrowLeft, Eye, EyeOff, Mail, Lock, User as UserIcon, BookOpen, Briefcase, ShoppingCart } from 'lucide-react';
 import Logo from '@/components/Logo';
+import { logSupabaseError, getUserFriendlyErrorMessage } from '@/lib/errorUtils';
 import { Link } from 'react-router-dom';
 
 const Auth = () => {
