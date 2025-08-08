@@ -196,7 +196,7 @@ const Index = () => {
             <div className="lg:col-span-6 xl:col-span-7">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 rounded-3xl blur-3xl transform rotate-6"></div>
-                <div className="relative bg-white rounded-2xl p-6 shadow-2xl border border-gray-100">
+                <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-2xl border border-gray-100 dark:border-gray-700">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">Trending Now</h3>
                     <Badge className="bg-red-100 text-red-700">Live</Badge>
