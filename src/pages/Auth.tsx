@@ -72,14 +72,15 @@ const Auth = () => {
         });
         
         if (profileError) {
-          console.warn('Profile creation warning:', profileError);
+          logSupabaseError('Profile creation warning', profileError);
         }
         
         toast.success('Account created! Check your email to verify your account.');
       }
     } catch (error: any) {
-      console.error('Signup error:', error);
-      toast.error('An unexpected error occurred. Please try again.');
+      logSupabaseError('Signup error', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(userMessage);
     } finally {
       setLoading(false);
     }
@@ -114,8 +115,9 @@ const Auth = () => {
         }
       }
     } catch (error: any) {
-      console.error('Signin error:', error);
-      toast.error('An unexpected error occurred. Please try again.');
+      logSupabaseError('Signin error', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(userMessage);
     } finally {
       setLoading(false);
     }
