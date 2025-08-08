@@ -460,11 +460,11 @@ const Index = () => {
             
             <div>
               <h3 className="font-semibold mb-6 text-lg">Platform</h3>
-              <ul className="space-y-3 text-gray-400">
-                <li><Link to="/marketplace" className="hover:text-white transition-colors">Marketplace</Link></li>
-                <li><Link to="/how-it-works" className="hover:text-white transition-colors">How It Works</Link></li>
-                <li><Link to="/auth" className="hover:text-white transition-colors">Sign Up</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Mobile App</a></li>
+              <ul className="space-y-3 text-gray-400 dark:text-gray-300">
+                <li><Link to="/marketplace" className="hover:text-white dark:hover:text-gray-100 transition-colors">Marketplace</Link></li>
+                <li><Link to="/how-it-works" className="hover:text-white dark:hover:text-gray-100 transition-colors">How It Works</Link></li>
+                <li><Link to="/auth" className="hover:text-white dark:hover:text-gray-100 transition-colors">Sign Up</Link></li>
+                <li><a href="#" className="hover:text-white dark:hover:text-gray-100 transition-colors">Mobile App</a></li>
               </ul>
             </div>
             
