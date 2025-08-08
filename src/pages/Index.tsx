@@ -279,9 +279,9 @@ const Index = () => {
                     <span>{item.category}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-gray-900">
+                    <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                       {item.price}
-                      {(item.type === 'job' || item.type === 'internship') && <span className="text-sm font-normal text-gray-500">/month</span>}
+                      {(item.type === 'job' || item.type === 'internship') && <span className="text-sm font-normal text-gray-500 dark:text-gray-400">/month</span>}
                     </span>
                     <Button size="sm" className="btn-warm text-white shadow-lg">
                       {item.type === 'item' ? 'View' : 'Apply'}
