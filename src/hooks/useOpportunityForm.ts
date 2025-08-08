@@ -111,8 +111,9 @@ export const useOpportunityForm = (onSuccess: () => void) => {
       toast.success('Opportunity posted successfully!');
       onSuccess();
     } catch (error: any) {
-      toast.error(error.message || 'Error posting opportunity');
-      console.error('Error posting opportunity:', error);
+      logSupabaseError('Error posting opportunity', error);
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast.error(userMessage);
     } finally {
       setLoading(false);
     }
