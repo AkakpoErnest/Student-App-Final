@@ -95,11 +95,11 @@ const Marketplace = () => {
 
       setOpportunities(data || getSampleOpportunities());
     } catch (error: any) {
-      console.error('Error fetching opportunities:', {
-        error,
-        message: error?.message,
-        stack: error?.stack
-      });
+      logSupabaseError('Error fetching opportunities', error);
+
+      // Show user-friendly error message
+      const userMessage = getUserFriendlyErrorMessage(error);
+      toast?.error(`Failed to load opportunities: ${userMessage}`);
 
       // Fallback to sample data
       setOpportunities(getSampleOpportunities());
