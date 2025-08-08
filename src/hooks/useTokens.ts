@@ -64,10 +64,8 @@ export const useTokens = (user: User | null) => {
         .eq('user_id', user.id)
         .single();
 
-      console.log('Token fetch result:', { data, error });
-
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching tokens:', error);
+        logSupabaseError('Error fetching tokens', error);
         throw error;
       }
 
