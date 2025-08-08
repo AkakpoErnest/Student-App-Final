@@ -132,7 +132,7 @@ const Auth = () => {
       {/* Header */}
       <header className="relative z-10 p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-gray-600 hover:text-orange-600 transition-colors group">
+          <Link to="/" className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors group">
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span>Back to Home</span>
           </Link>
