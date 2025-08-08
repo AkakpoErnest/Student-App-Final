@@ -107,6 +107,12 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   }
 
+  .dark .glass-effect {
+    background: rgba(31, 41, 55, 0.95);
+    border: 1px solid rgba(249, 115, 22, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
   .glass-effect-dark {
     background: rgba(30, 41, 59, 0.95);
     backdrop-filter: blur(20px);
