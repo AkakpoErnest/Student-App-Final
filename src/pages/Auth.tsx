@@ -124,9 +124,9 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="geometric-bg absolute inset-0 opacity-40"></div>
-        <div className="absolute top-0 left-0 w-1/2 h-1/2 warm-gradient opacity-10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-2/3 h-2/3 cool-gradient opacity-10 rounded-full blur-3xl"></div>
+        <div className="geometric-bg absolute inset-0 opacity-40 dark:opacity-20"></div>
+        <div className="absolute top-0 left-0 w-1/2 h-1/2 warm-gradient opacity-10 dark:opacity-5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-2/3 h-2/3 cool-gradient opacity-10 dark:opacity-5 rounded-full blur-3xl"></div>
       </div>
 
       {/* Header */}
