@@ -217,7 +217,7 @@ const Index = () => {
                       </div>
                     ))}
                   </div>
-                  <Button variant="ghost" className="w-full mt-4 text-orange-600 hover:text-orange-700 hover:bg-orange-50">
+                  <Button variant="ghost" className="w-full mt-4 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 dark:text-orange-400">
                     View All Items →
                   </Button>
                 </div>
