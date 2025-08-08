@@ -327,15 +327,15 @@ const Index = () => {
               <Link
                 key={category.name}
                 to={`/marketplace?category=${category.name}`}
-                className="group text-center p-6 rounded-xl border border-gray-200 hover:border-orange-500 hover:shadow-lg transition-all duration-300"
+                className="group text-center p-6 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-500 dark:hover:border-orange-400 hover:shadow-lg dark:bg-gray-800 transition-all duration-300"
               >
                 <div className={`w-16 h-16 ${category.color} rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
                   <category.icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
                   {category.name}
                 </h3>
-                <p className="text-sm text-gray-500">{category.count} items</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{category.count} items</p>
               </Link>
             ))}
           </div>
