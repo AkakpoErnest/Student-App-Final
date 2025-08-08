@@ -53,10 +53,8 @@ export const useTokens = (user: User | null) => {
         .eq('id', user.id)
         .limit(1);
 
-      console.log('Supabase connection test:', { testData, testError });
-
       if (testError) {
-        console.error('Supabase connection error:', testError);
+        logSupabaseError('Supabase connection test failed', testError);
         throw testError;
       }
       
