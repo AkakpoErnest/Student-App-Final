@@ -414,7 +414,7 @@ const Index = () => {
       <section className="py-20 custom-gradient-1 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl sm:text-5xl font-bold text-white dark:text-gray-100 mb-6">
             Ready to Join Ghana's Student Economy?
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
