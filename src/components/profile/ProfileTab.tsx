@@ -13,14 +13,14 @@ import { CheckCircle, AlertCircle, Clock, User as UserIcon, Mail, Phone, Univers
 
 interface Profile {
   id: string;
-  full_name: string;
-  email: string;
-  university: string;
-  phone: string;
-  wallet_address: string;
-  verification_status: string;
-  student_id: string;
-  avatar_url: string;
+  full_name: string | null;
+  email: string | null;
+  university: string | null;
+  phone: string | null;
+  wallet_address: string | null;
+  verification_status: string | null;
+  student_id: string | null;
+  avatar_url: string | null;
 }
 
 interface ProfileTabProps {
@@ -34,6 +34,11 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    phone: '',
+    walletAddress: ''
+  });
   const [verificationData, setVerificationData] = useState({
     university: '',
     studentId: '',
@@ -59,17 +64,15 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
 
   const fetchProfile = async () => {
     try {
-      // Get the current user to ensure we have the right ID
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) {
-        throw new Error('Not authenticated');
-      }
-
+      console.log('Fetching profile for user:', user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', currentUser.id)
+        .eq('id', user.id)
         .single();
+
+      console.log('Profile fetch result:', { data, error });
 
       if (error && error.code !== 'PGRST116') {
         console.error('Profile fetch error:', error);
@@ -78,6 +81,11 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
 
       if (data) {
         setProfile(data);
+        setFormData({
+          fullName: data.full_name || '',
+          phone: data.phone || '',
+          walletAddress: data.wallet_address || ''
+        });
         setVerificationData({
           university: data.university || '',
           studentId: data.student_id || '',
@@ -86,28 +94,36 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
         });
       } else {
         // Create a new profile if it doesn't exist
-        const { error: createError } = await supabase
+        console.log('Creating new profile for user:', user.id);
+        const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({
-            id: currentUser.id,
-            email: currentUser.email,
-            full_name: currentUser.user_metadata?.full_name || '',
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || '',
             verification_status: 'unverified',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
-          });
+          })
+          .select()
+          .single();
 
         if (createError) {
           console.error('Profile creation error:', createError);
+          throw createError;
         } else {
-          // Fetch the newly created profile
-          await fetchProfile();
-          return;
+          console.log('Profile created successfully:', newProfile);
+          setProfile(newProfile);
+          setFormData({
+            fullName: newProfile.full_name || '',
+            phone: newProfile.phone || '',
+            walletAddress: newProfile.wallet_address || ''
+          });
         }
       }
     } catch (error: any) {
-      console.error('Error fetching profile:', error);
-      toast.error('Error loading profile');
+      console.error('Error in fetchProfile:', error);
+      toast.error('Error loading profile: ' + (error.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -116,30 +132,38 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      // Get the current user to ensure we have the right ID
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) {
-        throw new Error('Not authenticated');
+      console.log('Saving profile for user:', user.id);
+      console.log('Form data:', formData);
+
+      const updateData = {
+        full_name: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        wallet_address: formData.walletAddress.trim() || null,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Update data:', updateData);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      console.log('Profile update result:', { data, error });
+
+      if (error) {
+        console.error('Profile update error:', error);
+        throw error;
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: verificationData.fullName,
-          phone: verificationData.phone,
-          wallet_address: profile?.wallet_address || '',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentUser.id);
-
-      if (error) throw error;
-
-      toast.success('Profile updated successfully');
+      setProfile(data);
+      toast.success('Profile updated successfully!');
       setEditing(false);
-      fetchProfile();
     } catch (error: any) {
-      console.error('Profile update error:', error);
-      toast.error(error.message || 'Error updating profile');
+      console.error('Error in handleSaveProfile:', error);
+      toast.error('Error updating profile: ' + (error.message || 'Unknown error'));
     } finally {
       setSaving(false);
     }
@@ -148,31 +172,39 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const handleVerificationSubmit = async () => {
     setSaving(true);
     try {
-      // Get the current user to ensure we have the right ID
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) {
-        throw new Error('Not authenticated');
+      console.log('Submitting verification for user:', user.id);
+      console.log('Verification data:', verificationData);
+
+      const updateData = {
+        university: verificationData.university,
+        full_name: verificationData.fullName.trim(),
+        phone: verificationData.phone.trim(),
+        verification_status: 'pending',
+        student_id: verificationData.studentId.trim(),
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Verification update data:', updateData);
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      console.log('Verification update result:', { data, error });
+
+      if (error) {
+        console.error('Verification submit error:', error);
+        throw error;
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          university: verificationData.university,
-          full_name: verificationData.fullName,
-          phone: verificationData.phone,
-          verification_status: 'pending',
-          student_id: verificationData.studentId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentUser.id);
-
-      if (error) throw error;
-
-      toast.success('Verification request submitted successfully');
-      fetchProfile();
+      setProfile(data);
+      toast.success('Verification request submitted successfully!');
     } catch (error: any) {
-      console.error('Verification submit error:', error);
-      toast.error(error.message || 'Error submitting verification');
+      console.error('Error in handleVerificationSubmit:', error);
+      toast.error('Error submitting verification: ' + (error.message || 'Unknown error'));
     } finally {
       setSaving(false);
     }
@@ -215,33 +247,49 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
     setAvatarUploading(true);
     try {
+      console.log('Uploading avatar for user:', user.id);
+      
       const fileExt = file.name.split('.').pop();
       const filePath = `avatars/${user.id}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
-      if (uploadError) throw uploadError;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+        
+      if (uploadError) {
+        console.error('Avatar upload error:', uploadError);
+        throw uploadError;
+      }
+      
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
       const publicUrl = data.publicUrl;
       
-      // Update profile with new avatar URL
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) throw new Error('Not authenticated');
+      console.log('Avatar uploaded, updating profile with URL:', publicUrl);
       
-      const { error: updateError } = await supabase
+      // Update profile with new avatar URL
+      const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({ 
           avatar_url: publicUrl,
           updated_at: new Date().toISOString()
         })
-        .eq('id', currentUser.id);
+        .eq('id', user.id)
+        .select()
+        .single();
         
-      if (updateError) throw updateError;
-      toast.success('Profile picture updated!');
-      fetchProfile();
+      if (updateError) {
+        console.error('Avatar URL update error:', updateError);
+        throw updateError;
+      }
+      
+      setProfile(updatedProfile);
+      toast.success('Profile picture updated successfully!');
     } catch (error: any) {
-      console.error('Avatar upload error:', error);
-      toast.error(error.message || 'Error uploading profile picture');
+      console.error('Error in handleAvatarChange:', error);
+      toast.error('Error uploading profile picture: ' + (error.message || 'Unknown error'));
     } finally {
       setAvatarUploading(false);
     }
@@ -260,6 +308,23 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Debug Info */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardHeader>
+          <CardTitle className="text-blue-800">Debug Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 text-sm">
+            <div><strong>User ID:</strong> {user?.id}</div>
+            <div><strong>User Email:</strong> {user?.email}</div>
+            <div><strong>Profile Loaded:</strong> {profile ? 'Yes' : 'No'}</div>
+            <div><strong>Profile ID:</strong> {profile?.id || 'N/A'}</div>
+            <div><strong>Full Name:</strong> {profile?.full_name || 'N/A'}</div>
+            <div><strong>Verification Status:</strong> {profile?.verification_status || 'N/A'}</div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Profile Overview */}
       <Card>
         <CardHeader>
@@ -275,7 +340,11 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={avatarUploading} />
                   <UploadIcon className="w-4 h-4 text-blue-600" />
                 </label>
-                {avatarUploading && <div className="absolute inset-0 bg-white/70 dark:bg-black/70 flex items-center justify-center rounded-full"><div className="animate-spin h-6 w-6 border-b-2 border-blue-600"></div></div>}
+                {avatarUploading && (
+                  <div className="absolute inset-0 bg-white/70 dark:bg-black/70 flex items-center justify-center rounded-full">
+                    <div className="animate-spin h-6 w-6 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
               </div>
               <div>
                 <CardTitle className="flex items-center gap-2">
@@ -305,8 +374,8 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                 {editing ? (
                   <Input
                     id="fullName"
-                    value={verificationData.fullName}
-                    onChange={(e) => setVerificationData(prev => ({ ...prev, fullName: e.target.value }))}
+                    value={formData.fullName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                     placeholder="Your full name"
                   />
                 ) : (
@@ -322,6 +391,9 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                 <div className="flex items-center mt-2 p-3 bg-gray-50 rounded-md">
                   <Mail className="w-4 h-4 mr-2 text-gray-500" />
                   <span className="text-gray-900">{user.email}</span>
+                  {user.email_confirmed_at && (
+                    <CheckCircle className="w-4 h-4 ml-2 text-green-500" />
+                  )}
                 </div>
               </div>
             </div>
@@ -332,8 +404,8 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                 {editing ? (
                   <Input
                     id="phone"
-                    value={verificationData.phone}
-                    onChange={(e) => setVerificationData(prev => ({ ...prev, phone: e.target.value }))}
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="Your phone number"
                   />
                 ) : (
@@ -346,20 +418,39 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
               
               <div>
                 <Label>Wallet Address</Label>
-                <div className="flex items-center mt-2 p-3 bg-gray-50 rounded-md">
-                  <CreditCard className="w-4 h-4 mr-2 text-gray-500" />
-                  <span className="text-gray-900 font-mono text-sm">
-                    {profile?.wallet_address || 'Not connected'}
-                  </span>
-                </div>
+                {editing ? (
+                  <Input
+                    value={formData.walletAddress}
+                    onChange={(e) => setFormData(prev => ({ ...prev, walletAddress: e.target.value }))}
+                    placeholder="Your blockchain wallet address"
+                  />
+                ) : (
+                  <div className="flex items-center mt-2 p-3 bg-gray-50 rounded-md">
+                    <CreditCard className="w-4 h-4 mr-2 text-gray-500" />
+                    <span className="text-gray-900 font-mono text-sm">
+                      {profile?.wallet_address || 'Not connected'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {editing && (
-            <div className="pt-4">
+            <div className="pt-4 flex gap-3">
               <Button onClick={handleSaveProfile} disabled={saving}>
                 {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+              <Button variant="outline" onClick={() => {
+                setEditing(false);
+                // Reset form data to original values
+                setFormData({
+                  fullName: profile?.full_name || '',
+                  phone: profile?.phone || '',
+                  walletAddress: profile?.wallet_address || ''
+                });
+              }}>
+                Cancel
               </Button>
             </div>
           )}
@@ -515,7 +606,7 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
               <h4 className="font-medium">Password</h4>
-              <p className="text-sm text-gray-600">Last updated: Never</p>
+              <p className="text-sm text-gray-600">Update your account password</p>
             </div>
             <Button variant="outline" size="sm">
               Change Password
@@ -524,12 +615,16 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
           
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
-              <h4 className="font-medium">Two-Factor Authentication</h4>
-              <p className="text-sm text-gray-600">Add an extra layer of security</p>
+              <h4 className="font-medium">Email Verification</h4>
+              <p className="text-sm text-gray-600">
+                {user.email_confirmed_at ? 'Email verified' : 'Email not verified'}
+              </p>
             </div>
-            <Button variant="outline" size="sm">
-              Enable 2FA
-            </Button>
+            {!user.email_confirmed_at && (
+              <Button variant="outline" size="sm">
+                Verify Email
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
