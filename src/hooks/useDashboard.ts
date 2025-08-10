@@ -127,21 +127,44 @@ export const useDashboard = () => {
 
   // Ensure profile exists for user, create if missing
   const ensureProfile = async (user: User) => {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    if (!profile) {
-      await supabase.from('profiles').insert({
-        id: user.id,
-        full_name: user.user_metadata.full_name || '',
-        verification_status: 'pending',
-        avatar_url: '', // Placeholder for profile pic
-        // Add other fields as needed
-      });
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        const { error: insertError } = await supabase.from('profiles').insert({
+          id: user.id,
+          full_name: user.user_metadata?.full_name || '',
+          email: user.email || '',
+          verification_status: 'unverified',
+          avatar_url: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+        
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          toast.error('Error creating user profile');
+          return;
+        }
+        
+        console.log('Profile created successfully');
+      } else if (error) {
+        console.error('Error fetching profile:', error);
+        toast.error('Error loading user profile');
+        return;
+      }
+      
+      // Fetch the profile (either existing or newly created)
+      fetchProfile(user.id);
+    } catch (error) {
+      console.error('Error in ensureProfile:', error);
+      toast.error('Error setting up user profile');
     }
-    fetchProfile(user.id);
   };
 
   return {

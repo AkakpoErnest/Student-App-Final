@@ -56,7 +56,9 @@ const PostOpportunity = ({ onSuccess }: PostOpportunityProps) => {
     return <div>Loading...</div>;
   }
 
-  const canPost = profile?.verification_status === 'verified' || profile?.verification_status === 'pending';
+  // Allow posting for all users, but show verification status
+  const canPost = true; // Remove verification restriction
+  const isVerified = profile?.verification_status === 'verified';
 
   return (
     <div className="space-y-6">
@@ -72,6 +74,13 @@ const PostOpportunity = ({ onSuccess }: PostOpportunityProps) => {
             <CardDescription>
               Create a new listing for jobs, internships, or items
             </CardDescription>
+            {!isVerified && (
+              <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>Note:</strong> Your account is not yet verified. You can still post opportunities, but verification may increase your credibility with other users.
+                </p>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
