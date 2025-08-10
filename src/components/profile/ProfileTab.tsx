@@ -59,13 +59,20 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
 
   const fetchProfile = async () => {
     try {
+      // Get the current user to ensure we have the right ID
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        throw new Error('Not authenticated');
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', currentUser.id)
         .single();
 
       if (error && error.code !== 'PGRST116') {
+        console.error('Profile fetch error:', error);
         throw error;
       }
 
@@ -77,6 +84,26 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
           fullName: data.full_name || '',
           phone: data.phone || ''
         });
+      } else {
+        // Create a new profile if it doesn't exist
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: currentUser.id,
+            email: currentUser.email,
+            full_name: currentUser.user_metadata?.full_name || '',
+            verification_status: 'unverified',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (createError) {
+          console.error('Profile creation error:', createError);
+        } else {
+          // Fetch the newly created profile
+          await fetchProfile();
+          return;
+        }
       }
     } catch (error: any) {
       console.error('Error fetching profile:', error);
@@ -89,14 +116,21 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
+      // Get the current user to ensure we have the right ID
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        throw new Error('Not authenticated');
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
           full_name: verificationData.fullName,
           phone: verificationData.phone,
-          wallet_address: profile?.wallet_address || ''
+          wallet_address: profile?.wallet_address || '',
+          updated_at: new Date().toISOString()
         })
-        .eq('id', user.id);
+        .eq('id', currentUser.id);
 
       if (error) throw error;
 
@@ -104,6 +138,7 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
       setEditing(false);
       fetchProfile();
     } catch (error: any) {
+      console.error('Profile update error:', error);
       toast.error(error.message || 'Error updating profile');
     } finally {
       setSaving(false);
@@ -113,6 +148,12 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const handleVerificationSubmit = async () => {
     setSaving(true);
     try {
+      // Get the current user to ensure we have the right ID
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        throw new Error('Not authenticated');
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -120,15 +161,17 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
           full_name: verificationData.fullName,
           phone: verificationData.phone,
           verification_status: 'pending',
-          student_id: verificationData.studentId
+          student_id: verificationData.studentId,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', user.id);
+        .eq('id', currentUser.id);
 
       if (error) throw error;
 
       toast.success('Verification request submitted successfully');
       fetchProfile();
     } catch (error: any) {
+      console.error('Verification submit error:', error);
       toast.error(error.message || 'Error submitting verification');
     } finally {
       setSaving(false);
@@ -180,12 +223,24 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
       const publicUrl = data.publicUrl;
+      
       // Update profile with new avatar URL
-      const { error: updateError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) throw new Error('Not authenticated');
+      
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentUser.id);
+        
       if (updateError) throw updateError;
       toast.success('Profile picture updated!');
       fetchProfile();
     } catch (error: any) {
+      console.error('Avatar upload error:', error);
       toast.error(error.message || 'Error uploading profile picture');
     } finally {
       setAvatarUploading(false);
