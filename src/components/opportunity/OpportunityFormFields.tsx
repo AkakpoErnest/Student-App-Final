@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface FormData {
   title: string;
@@ -14,13 +17,16 @@ interface FormData {
   location: string;
   university: string;
   requirements: string;
-  contact_info: string;
   image_url: string;
+  image_file?: File;
+  contact_email?: string;
+  contact_phone?: string;
+  contact_whatsapp?: string;
 }
 
 interface OpportunityFormFieldsProps {
   formData: FormData;
-  onInputChange: (field: string, value: string) => void;
+  onInputChange: (field: string, value: string | File) => void;
   getAvailableCategories: () => string[];
 }
 
@@ -36,6 +42,17 @@ const OpportunityFormFields = ({ formData, onInputChange, getAvailableCategories
     'Ho Technical University (HTU)',
     'All Universities'
   ];
+
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  // Cleanup preview URL when component unmounts or image changes
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return (
     <>
@@ -130,14 +147,93 @@ const OpportunityFormFields = ({ formData, onInputChange, getAvailableCategories
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="image_url">Image URL (optional)</Label>
-          <Input
-            id="image_url"
-            type="url"
-            placeholder="https://example.com/image.jpg"
-            value={formData.image_url}
-            onChange={(e) => onInputChange('image_url', e.target.value)}
-          />
+          <Label htmlFor="image">Image Upload</Label>
+          <div className="space-y-3">
+            {/* File Upload Input */}
+            <div className="flex items-center gap-3">
+              <Input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // Validate file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast.error('File size must be less than 5MB. Please choose a smaller image.');
+                      return;
+                    }
+                    
+                    // Clean up previous preview URL to prevent memory leaks
+                    if (previewUrl) {
+                      URL.revokeObjectURL(previewUrl);
+                    }
+                    
+                    onInputChange('image_file', file);
+                    // Create a preview URL for display only (don't store in form data)
+                    const newPreviewUrl = URL.createObjectURL(file);
+                    // Store the preview URL separately for display purposes
+                    setPreviewUrl(newPreviewUrl);
+                  }
+                }}
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // Clean up the preview URL to prevent memory leaks
+                  if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                  }
+                  onInputChange('image_file', undefined as any);
+                  onInputChange('image_url', '');
+                  setPreviewUrl('');
+                }}
+                className="text-red-600 hover:text-red-700"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Image Preview */}
+            {(formData.image_url || previewUrl) && (
+              <div className="relative">
+                <div className="w-full max-w-xs rounded-lg border border-gray-200 overflow-hidden">
+                  <img
+                    src={formData.image_url || previewUrl}
+                    alt="Preview"
+                    className="w-full h-32 object-cover"
+                  />
+                  <div className="p-2 bg-gray-50 text-xs text-gray-600">
+                    {formData.image_file ? (
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="w-3 h-3" />
+                        {formData.image_file.name}
+                        <span className="text-gray-400">
+                          ({(formData.image_file.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="w-3 h-3" />
+                        Image preview
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Upload Instructions */}
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>• Supported formats: JPG, PNG, GIF, WebP</p>
+              <p>• Maximum file size: 5MB</p>
+              <p>• Recommended dimensions: 800x600 pixels</p>
+              <p>• <strong>Tip:</strong> Smaller files upload faster!</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -178,15 +274,42 @@ const OpportunityFormFields = ({ formData, onInputChange, getAvailableCategories
 
       <div className="space-y-2">
         <Label htmlFor="contact_info">Contact Information</Label>
-        <Textarea
-          id="contact_info"
-          placeholder='{"email": "contact@example.com", "phone": "+233123456789", "whatsapp": "+233123456789"}'
-          value={formData.contact_info}
-          onChange={(e) => onInputChange('contact_info', e.target.value)}
-          rows={2}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="contact_email" className="text-sm">Email</Label>
+            <Input
+              id="contact_email"
+              type="email"
+              placeholder="your.email@example.com"
+              value={formData.contact_email || ''}
+              onChange={(e) => onInputChange('contact_email', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="contact_phone" className="text-sm">Phone</Label>
+            <Input
+              id="contact_phone"
+              type="tel"
+              placeholder="+233123456789"
+              value={formData.contact_phone || ''}
+              onChange={(e) => onInputChange('contact_phone', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="contact_whatsapp" className="text-sm">WhatsApp (Optional)</Label>
+            <Input
+              id="contact_whatsapp"
+              type="tel"
+              placeholder="+233123456789"
+              value={formData.contact_whatsapp || ''}
+              onChange={(e) => onInputChange('contact_whatsapp', e.target.value)}
+            />
+          </div>
+        </div>
         <p className="text-xs text-gray-500">
-          Enter as JSON format or plain text. Your profile email will be used if left empty.
+          Your profile email will be used if contact email is left empty.
         </p>
       </div>
     </>

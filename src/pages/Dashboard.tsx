@@ -11,6 +11,7 @@ import { useDashboard } from '@/hooks/useDashboard';
 import EscrowManager from '@/components/EscrowManager';
 import { Settings, Coins, Shield, User, Store } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PostOpportunity from '@/components/PostOpportunity';
 
 const Dashboard = () => {
   const { user, profile, opportunities, myOpportunities, loading, handleSignOut, refreshData } = useDashboard();
@@ -30,6 +31,18 @@ const Dashboard = () => {
     }
   }, [user, loading]);
 
+  // Refresh data when component comes into focus
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user && !loading) {
+        refreshData();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user, loading, refreshData]);
+
   if (loading) {
     return <DashboardLoading />;
   }
@@ -39,7 +52,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <DashboardHeader 
         profile={profile} 
         onSignOut={handleSignOut}
@@ -49,7 +62,7 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Marketplace Button */}
         <div className="mb-6 flex justify-center">
-          <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3">
+          <Button asChild size="lg" className="bg-gradient-to-r from-orange-600 to-teal-600 hover:from-orange-700 hover:to-teal-700 text-white px-8 py-3">
             <Link to="/marketplace" className="flex items-center gap-2">
               <Store className="w-5 h-5" />
               Go to Marketplace
@@ -58,8 +71,11 @@ const Dashboard = () => {
         </div>
 
         <Tabs defaultValue="manage" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={`grid w-full ${profile?.verification_status === 'verified' ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="manage">My Posts</TabsTrigger>
+            {profile?.verification_status === 'verified' && (
+              <TabsTrigger value="post">Post Opportunity</TabsTrigger>
+            )}
             <TabsTrigger value="tokens">Tokens</TabsTrigger>
             <TabsTrigger value="escrow">Escrow</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -71,6 +87,12 @@ const Dashboard = () => {
               onRefresh={refreshData} 
             />
           </TabsContent>
+          
+          {profile?.verification_status === 'verified' && (
+            <TabsContent value="post">
+              <PostOpportunity onSuccess={refreshData} />
+            </TabsContent>
+          )}
           
           <TabsContent value="tokens">
             <TokensTab user={user} />

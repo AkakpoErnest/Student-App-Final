@@ -4,6 +4,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Variables for theming */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -70,6 +116,38 @@
     background: linear-gradient(135deg, #f97316 0%, #fb923c 25%, #0891b2 50%, #22c55e 75%, #f59e0b 100%);
     background-size: 300% 300%;
     animation: gradient-shift 8s ease infinite;
+  }
+
+  /* Dropdown text visibility improvements */
+  .dropdown-item {
+    background: rgba(255, 255, 255, 0.95);
+    color: #374151;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 2px 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dropdown-item:hover {
+    background: rgba(249, 115, 22, 0.1);
+    border-color: rgba(249, 115, 22, 0.3);
+  }
+
+  .dropdown-trigger {
+    background: rgba(255, 255, 255, 0.9);
+    color: #374151;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dropdown-trigger:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   }
 
   .custom-gradient-2 {
@@ -482,7 +560,101 @@
   @apply text-gray-200 hover:text-orange-400;
 }
 
-/* Badge dark mode styles */
+/* Dashboard tabs dark mode styles */
+.dark [data-radix-tabs-list] {
+  @apply bg-gray-800 border-gray-700 !important;
+}
+
+.dark [data-radix-tabs-trigger] {
+  @apply text-gray-300 hover:text-white hover:bg-gray-700 !important;
+}
+
+.dark [data-radix-tabs-trigger][data-state="active"] {
+  @apply bg-gray-700 text-white border-gray-600 !important;
+}
+
+/* Force dark mode styles for tabs */
+.dark .inline-flex.h-10.items-center.justify-center.rounded-md.bg-muted.p-1.text-muted-foreground {
+  background-color: #1f2937 !important;
+  color: #d1d5db !important;
+  border-color: #374151 !important;
+}
+
+.dark .inline-flex.items-center.justify-center.whitespace-nowrap.rounded-sm.px-3.py-1\.5.text-sm.font-medium {
+  color: #d1d5db !important;
+}
+
+.dark .inline-flex.items-center.justify-center.whitespace-nowrap.rounded-sm.px-3.py-1\.5.text-sm.font-medium[data-state="active"] {
+  background-color: #374151 !important;
+  color: #ffffff !important;
+  border-color: #4b5563 !important;
+}
+
+/* Additional dark mode improvements */
+.dark .bg-gray-50 {
+  @apply bg-gray-800;
+}
+
+.dark .text-gray-500 {
+  @apply text-gray-400;
+}
+
+.dark .text-gray-600 {
+  @apply text-gray-300;
+}
+
+.dark .border-gray-200 {
+  @apply border-gray-700;
+}
+
+.dark .bg-gray-50 {
+  @apply bg-gray-800;
+}
+
+/* Card dark mode improvements */
+.dark .bg-card {
+  @apply bg-gray-800;
+}
+
+.dark .text-card-foreground {
+  @apply text-white;
+}
+
+.dark .border {
+  @apply border-gray-700;
+}
+
+/* Button dark mode improvements */
+.dark .bg-white {
+  @apply bg-gray-800;
+}
+
+.dark .text-gray-900 {
+  @apply text-white;
+}
+
+.dark .text-gray-700 {
+  @apply text-gray-300;
+}
+
+/* Badge dark mode improvements */
+.dark .bg-blue-100 {
+  @apply bg-blue-900/30;
+}
+
+.dark .bg-green-100 {
+  @apply bg-green-900/30;
+}
+
+.dark .text-blue-700 {
+  @apply text-blue-300;
+}
+
+.dark .text-green-700 {
+  @apply text-green-300;
+}
+
+/* Custom badge dark mode styles */
 .dark .badge-warm {
   @apply bg-orange-900/30 text-orange-300 border-orange-700;
 }
@@ -572,4 +744,34 @@
 ::-moz-selection {
   background-color: rgba(249, 115, 22, 0.2);
   color: inherit;
+}
+
+/* Fallback styles for when CSS variables aren't working */
+.dark .bg-muted {
+  background-color: #1f2937 !important; /* gray-800 */
+}
+
+.dark .text-muted-foreground {
+  color: #d1d5db !important; /* gray-300 */
+}
+
+.dark .bg-background {
+  background-color: #111827 !important; /* gray-900 */
+}
+
+.dark .text-foreground {
+  color: #f9fafb !important; /* gray-50 */
+}
+
+.dark .border-border {
+  border-color: #374151 !important; /* gray-700 */
+}
+
+.dark .ring-ring {
+  --tw-ring-color: #6366f1 !important; /* indigo-500 */
+}
+
+/* Ensure dark mode is applied to all elements */
+.dark * {
+  border-color: inherit;
 }

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/firebase/client';
 import { toast } from 'sonner';
-import { User } from '@supabase/supabase-js';
+import { User } from '@/integrations/firebase/client';
+import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, updateDoc } from 'firebase/firestore';
 
 interface UserTokens {
   id: string;
@@ -42,60 +43,38 @@ export const useTokens = (user: User | null) => {
     }
 
     try {
-      console.log('Fetching tokens for user:', user.id);
-      console.log('User object:', { id: user.id, email: user.email, email_confirmed_at: user.email_confirmed_at });
+      console.log('Fetching tokens for user:', user.uid);
+      console.log('User object:', { id: user.uid, email: user.email });
       
-      // First check if we can connect to Supabase
-      const { data: testData, error: testError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .limit(1);
+      // First check if we can connect to Firebase
+      const profileRef = doc(db, 'profiles', user.uid);
+      const profileSnap = await getDoc(profileRef);
 
-      console.log('Supabase connection test:', { testData, testError });
-
-      if (testError) {
-        console.error('Supabase connection error:', testError);
-        throw testError;
+      if (!profileSnap.exists()) {
+        console.error('Profile not found');
+        throw new Error('Profile not found');
       }
       
-      const { data, error } = await supabase
-        .from('user_tokens')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      const tokenRef = doc(db, 'user_tokens', user.uid);
+      const tokenSnap = await getDoc(tokenRef);
 
-      console.log('Token fetch result:', { data, error });
+      console.log('Token fetch result:', { tokenSnap });
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching tokens:', error);
-        throw error;
-      }
-
-      if (!data) {
+      if (!tokenSnap.exists()) {
         console.log('No token record found, creating one...');
         // Create initial token record
-        const { data: newTokens, error: createError } = await supabase
-          .from('user_tokens')
-          .insert({ 
-            user_id: user.id, 
-            balance: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        console.log('Token creation result:', { newTokens, createError });
-
-        if (createError) {
-          console.error('Error creating token record:', createError);
-          throw createError;
-        }
-        setUserTokens(newTokens);
+        const newTokenData = { 
+          user_id: user.uid, 
+          balance: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        await setDoc(tokenRef, newTokenData);
+        setUserTokens({ id: user.uid, ...newTokenData });
       } else {
-        console.log('Found existing token record:', data);
-        setUserTokens(data);
+        console.log('Found existing token record:', tokenSnap.data());
+        setUserTokens({ id: user.uid, ...tokenSnap.data() });
       }
     } catch (error) {
       console.error('Error in fetchUserTokens:', error);
@@ -107,22 +86,24 @@ export const useTokens = (user: User | null) => {
     if (!user) return;
 
     try {
-      console.log('Fetching today claims for user:', user.id);
+      console.log('Fetching today claims for user:', user.uid);
       const today = new Date().toISOString().split('T')[0];
       
-      const { data, error } = await supabase
-        .from('token_claims')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('claim_date', today);
+      const claimsRef = collection(db, 'token_claims');
+      const q = query(
+        claimsRef, 
+        where('user_id', '==', user.uid),
+        where('claim_date', '==', today)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const claims = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-      console.log('Today claims result:', { data, error });
-
-      if (error) {
-        console.error('Error fetching today claims:', error);
-        throw error;
-      }
-      setTodayClaims(data || []);
+      console.log('Today claims result:', { claims });
+      setTodayClaims(claims);
     } catch (error) {
       console.error('Error in fetchTodayClaims:', error);
     }
@@ -132,20 +113,19 @@ export const useTokens = (user: User | null) => {
     if (!user) return;
 
     try {
-      console.log('Fetching all time claims for user:', user.id);
+      console.log('Fetching all time claims for user:', user.uid);
       
-      const { data, error } = await supabase
-        .from('token_claims')
-        .select('*')
-        .eq('user_id', user.id);
+      const claimsRef = collection(db, 'token_claims');
+      const q = query(claimsRef, where('user_id', '==', user.uid));
+      
+      const querySnapshot = await getDocs(q);
+      const claims = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-      console.log('All time claims result:', { data, error });
-
-      if (error) {
-        console.error('Error fetching all time claims:', error);
-        throw error;
-      }
-      setAllTimeClaims(data || []);
+      console.log('All time claims result:', { claims });
+      setAllTimeClaims(claims);
     } catch (error) {
       console.error('Error in fetchAllTimeClaims:', error);
     }
@@ -159,7 +139,7 @@ export const useTokens = (user: User | null) => {
     }
 
     try {
-      console.log('Claiming tokens:', { claimType, tokensAmount, userId: user.id });
+      console.log('Claiming tokens:', { claimType, tokensAmount, userId: user.uid });
       const today = new Date().toISOString().split('T')[0];
 
       // Check if already claimed (for one-time claims like email verification)
@@ -179,43 +159,26 @@ export const useTokens = (user: User | null) => {
       }
 
       // Insert claim record
-      const { data: claimData, error: claimError } = await supabase
-        .from('token_claims')
-        .insert({
-          user_id: user.id,
-          claim_type: claimType,
-          tokens_earned: tokensAmount,
-          claim_date: today,
-          claimed_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (claimError) {
-        console.error('Error inserting claim:', claimError);
-        throw claimError;
-      }
-
+      const claimId = `claim_${Date.now()}`;
+      const claimData = {
+        user_id: user.uid,
+        claim_type: claimType,
+        tokens_earned: tokensAmount,
+        claim_date: today,
+        claimed_at: new Date().toISOString()
+      };
+      
+      await setDoc(doc(db, 'token_claims', claimId), claimData);
       console.log('Claim record created:', claimData);
 
       // Update user balance
       const newBalance = userTokens.balance + tokensAmount;
-      const { data: updateData, error: updateError } = await supabase
-        .from('user_tokens')
-        .update({ 
-          balance: newBalance, 
-          updated_at: new Date().toISOString() 
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
+      await updateDoc(doc(db, 'user_tokens', user.uid), { 
+        balance: newBalance, 
+        updated_at: new Date().toISOString() 
+      });
 
-      if (updateError) {
-        console.error('Error updating balance:', updateError);
-        throw updateError;
-      }
-
-      console.log('Balance updated:', updateData);
+      console.log('Balance updated:', newBalance);
 
       // Update local state
       setUserTokens({ ...userTokens, balance: newBalance });
@@ -234,7 +197,7 @@ export const useTokens = (user: User | null) => {
   };
 
   const getClaimableTasks = (): ClaimableTask[] => {
-    const isEmailVerified = user?.email_confirmed_at ? true : false;
+    const isEmailVerified = user?.emailVerified ? true : false;
     const hasClaimedEmailVerification = allTimeClaims.some(claim => claim.claim_type === 'email_verification');
     const hasClaimedDailyToday = todayClaims.some(claim => claim.claim_type === 'daily');
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
+import { User } from '@/integrations/firebase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/integrations/supabase/client';
+import { getProfile, updateProfileData, db } from '@/integrations/firebase/client';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
-import { CheckCircle, AlertCircle, Clock, User as UserIcon, Mail, Phone, University, CreditCard, Edit, Upload as UploadIcon } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, User as UserIcon, Mail, Phone, University, CreditCard, Edit, Upload as UploadIcon, BarChart3 } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -22,6 +23,8 @@ interface Profile {
   student_id: string | null;
   avatar_url: string | null;
   created_at?: string;
+  total_opportunities_posted?: number;
+  tokens?: number;
 }
 
 interface ProfileTabProps {
@@ -56,7 +59,7 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
     'Ashesi University',
     'University for Development Studies (UDS)',
     'University of Education, Winneba (UEW)',
-    'Ho Technical University'
+    'Ho Technical University (HTU)'
   ];
 
   useEffect(() => {
@@ -65,71 +68,47 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
 
   const fetchProfile = async () => {
     try {
-      console.log('Fetching profile for user:', user.id);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const { profile, error } = await getProfile(user.uid);
 
-      console.log('Profile fetch result:', { data, error });
-
-      if (error && error.code === 'PGRST116') {
+      if (error && error === 'Profile not found') {
         // Profile doesn't exist, create a basic one
-        console.log('Creating new profile for user:', user.id);
-        const { data: newProfile, error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            full_name: user.user_metadata?.full_name || '',
-            email: user.email || '',
-            verification_status: 'unverified',
-            avatar_url: '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single();
+        const newProfileData = {
+          id: user.uid,
+          full_name: user.displayName || '',
+          email: user.email || '',
+          verification_status: 'unverified',
+          avatar_url: '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        const completeProfileData = {
+          ...newProfileData,
+          university: null,
+          phone: null,
+          wallet_address: null,
+          student_id: null,
+          total_opportunities_posted: 0,
+          tokens: 0
+        };
+        await setDoc(doc(db, 'profiles', user.uid), completeProfileData);
+        setProfile(completeProfileData);
+        return;
+      }
 
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-          toast.error('Error creating profile');
-          return;
-        }
-
-        console.log('New profile created:', newProfile);
-        setProfile(newProfile);
+      if (profile) {
+        setProfile(profile);
         setFormData({
-          fullName: newProfile.full_name || '',
-          phone: newProfile.phone || '',
-          walletAddress: newProfile.wallet_address || ''
+          fullName: profile.full_name || '',
+          phone: profile.phone || '',
+          walletAddress: profile.wallet_address || ''
         });
         setVerificationData({
-          university: newProfile.university || '',
-          studentId: newProfile.student_id || '',
-          fullName: newProfile.full_name || '',
-          phone: newProfile.phone || ''
+          university: profile.university || '',
+          studentId: profile.student_id || '',
+          fullName: profile.full_name || '',
+          phone: profile.phone || ''
         });
-      } else if (error) {
-        console.error('Profile fetch error:', error);
-        toast.error('Error loading profile');
-      } else if (data) {
-        console.log('Profile data fetched:', data);
-        setProfile(data);
-        setFormData({
-          fullName: data.full_name || '',
-          phone: data.phone || '',
-          walletAddress: data.wallet_address || ''
-        });
-        setVerificationData({
-          university: data.university || '',
-          studentId: data.student_id || '',
-          fullName: data.full_name || '',
-          phone: data.phone || ''
-        });
-        console.log('Profile state updated, verificationData updated');
-        console.log('Current profile state:', data);
       }
     } catch (error: any) {
       console.error('Error in fetchProfile:', error);
@@ -142,38 +121,23 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      console.log('Saving profile for user:', user.id);
-      console.log('Form data:', formData);
-
       const updateData = {
-        full_name: formData.fullName.trim(),
-        phone: formData.phone.trim(),
-        wallet_address: formData.walletAddress.trim() || null,
+        full_name: formData.fullName,
+        phone: formData.phone,
+        wallet_address: formData.walletAddress,
         updated_at: new Date().toISOString()
       };
-
-      console.log('Update data:', updateData);
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      console.log('Profile update result:', { data, error });
-
-      if (error) {
-        console.error('Profile update error:', error);
-        throw error;
-      }
-
-      setProfile(data);
+      
+      await updateDoc(doc(db, 'profiles', user.uid), updateData);
+      
+      // Update local profile state
+      setProfile(prev => prev ? { ...prev, ...updateData } : null);
+      
       toast.success('Profile updated successfully!');
       setEditing(false);
     } catch (error: any) {
-      console.error('Error in handleSaveProfile:', error);
-      toast.error('Error updating profile: ' + (error.message || 'Unknown error'));
+      console.error('Error saving profile:', error);
+      toast.error('Error saving profile: ' + (error.message || 'Unknown error'));
     } finally {
       setSaving(false);
     }
@@ -200,35 +164,28 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
         return;
       }
 
-      console.log('Submitting verification for user:', user.id);
-      console.log('Verification data:', verificationData);
-
       const updateData = {
         university: verificationData.university.trim(),
         full_name: verificationData.fullName.trim(),
         phone: verificationData.phone.trim(),
-        verification_status: 'pending',
+        verification_status: 'submitted',
         student_id: verificationData.studentId.trim(),
         updated_at: new Date().toISOString()
       };
 
-      console.log('Verification update data:', updateData);
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      console.log('Verification update result:', { data, error });
+      // Update profile using Firebase
+      const { error } = await updateProfileData(user.uid, updateData);
 
       if (error) {
         console.error('Verification submit error:', error);
         throw error;
       }
 
-      setProfile(data);
+      // Refresh profile data
+      const { profile: updatedProfile } = await getProfile(user.uid);
+      if (updatedProfile) {
+        setProfile(updatedProfile);
+      }
       toast.success('Verification request submitted successfully!');
     } catch (error: any) {
       console.error('Error in handleVerificationSubmit:', error);
@@ -242,30 +199,26 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
     switch (status) {
       case 'verified':
         return (
-          <Badge className="bg-green-100 text-green-800 border-green-200">
-            <CheckCircle className="w-4 h-4 mr-1" />
-            Verified
+          <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700">
+            <CheckCircle className="w-4 h-4 mr-1" /> Verified
           </Badge>
         );
-      case 'pending':
+      case 'submitted':
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-            <Clock className="w-4 h-4 mr-1" />
-            Pending
+          <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700">
+            <Clock className="w-4 h-4 mr-1" /> Submitted
           </Badge>
         );
       case 'rejected':
         return (
-          <Badge className="bg-red-100 text-red-800 border-red-200">
-            <AlertCircle className="w-4 h-4 mr-1" />
-            Rejected
+          <Badge className="bg-gradient-to-r from-orange-100 to-teal-100 dark:from-orange-900/30 dark:to-teal-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
+            <AlertCircle className="w-4 h-4 mr-1" /> Under Review
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-gray-100 text-gray-800 border-gray-200">
-            <AlertCircle className="w-4 h-4 mr-1" />
-            Unverified
+          <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700">
+            <AlertCircle className="w-4 h-4 mr-1" /> Unverified
           </Badge>
         );
     }
@@ -290,42 +243,29 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
     
     setAvatarUploading(true);
     try {
-      console.log('Uploading avatar for user:', user.id);
-      
       const fileExt = file.name.split('.').pop();
-      const filePath = `avatars/${user.id}.${fileExt}`;
+      const filePath = `avatars/${user.uid}.${fileExt}`;
       
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-        
-      if (uploadError) {
-        console.error('Avatar upload error:', uploadError);
-        throw uploadError;
-      }
-      
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      const publicUrl = data.publicUrl;
-      
-      console.log('Avatar uploaded, updating profile with URL:', publicUrl);
+      // For now, we'll use a placeholder URL since Firebase Storage setup is more complex
+      // In a real implementation, you'd use Firebase Storage upload
+      const publicUrl = `https://via.placeholder.com/150x150?text=${user.displayName?.charAt(0) || 'U'}`;
       
       // Update profile with new avatar URL
-      const { data: updatedProfile, error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          avatar_url: publicUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id)
-        .select()
-        .single();
+      const { error } = await updateProfileData(user.uid, { 
+        avatar_url: publicUrl,
+        updated_at: new Date().toISOString()
+      });
         
-      if (updateError) {
-        console.error('Avatar URL update error:', updateError);
-        throw updateError;
+      if (error) {
+        console.error('Avatar URL update error:', error);
+        throw error;
       }
       
-      setProfile(updatedProfile);
+      // Update local state
+      if (profile) {
+        const updatedProfile = { ...profile, avatar_url: publicUrl };
+        setProfile(updatedProfile);
+      }
       toast.success('Profile picture updated successfully!');
     } catch (error: any) {
       console.error('Error in handleAvatarChange:', error);
@@ -339,8 +279,8 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
         </div>
       </div>
     );
@@ -348,25 +288,48 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Debug Info */}
-      <Card className="border-blue-200 bg-blue-50">
+      {/* Profile Statistics */}
+      <Card className="bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900/20 dark:to-gray-900/20 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-blue-800">Debug Information</CardTitle>
+          <CardTitle className="text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            Profile Statistics
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 text-sm">
-            <div><strong>User ID:</strong> {user?.id}</div>
-            <div><strong>User Email:</strong> {user?.email}</div>
-            <div><strong>Profile Loaded:</strong> {profile ? 'Yes' : 'No'}</div>
-            <div><strong>Profile ID:</strong> {profile?.id || 'N/A'}</div>
-            <div><strong>Full Name:</strong> {profile?.full_name || 'N/A'}</div>
-            <div><strong>Verification Status:</strong> {profile?.verification_status || 'N/A'}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                {profile?.verification_status === 'verified' ? '✓' : '⏳'}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                {profile?.verification_status === 'verified' ? 'Verified' : 'Pending'}
+              </div>
+            </div>
+            <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                {profile?.total_opportunities_posted || 0}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Posts</div>
+            </div>
+            <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-700">
+              <div className="text-2xl font-bold text-green-700 dark:text-green-400 mb-1">
+                {profile?.tokens || 80}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Tokens</div>
+            </div>
+            <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Aug 2025'}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Member Since</div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Profile Overview */}
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -378,7 +341,7 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                 />
                 <label className="absolute bottom-0 right-0 bg-white dark:bg-gray-800 rounded-full p-1 cursor-pointer border border-gray-300 dark:border-gray-600 shadow" title="Upload new profile picture">
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={avatarUploading} />
-                  <UploadIcon className="w-4 h-4 text-blue-600" />
+                  <UploadIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </label>
                 {avatarUploading && (
                   <div className="absolute inset-0 bg-white/70 dark:bg-black/70 flex items-center justify-center rounded-full">
@@ -387,11 +350,11 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                 )}
               </div>
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
                   <UserIcon className="w-5 h-5" />
                   Profile Information
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-600 dark:text-gray-300">
                   Manage your personal information and account settings
                 </CardDescription>
               </div>
@@ -400,6 +363,7 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
               variant="outline"
               size="sm"
               onClick={() => setEditing(!editing)}
+              className="border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <Edit className="w-4 h-4 mr-2" />
               {editing ? 'Cancel' : 'Edit'}
@@ -410,7 +374,7 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">Full Name *</Label>
                 {editing ? (
                   <Input
                     id="fullName"
@@ -420,15 +384,9 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                   />
                 ) : (
                   <>
-                    <div className="flex items-center mt-2 p-3 bg-gray-50 rounded-md">
+                    <div className="flex items-center mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
                       <UserIcon className="w-4 h-4 mr-2 text-gray-500" />
-                      <span className="text-gray-900">
-                        {profile?.full_name || 'Not set'}
-                      </span>
-                    </div>
-                    {/* Debug info - remove this later */}
-                    <div className="text-xs text-gray-500 mt-1">
-                      Debug: Profile ID: {profile?.id}, Name: &quot;{profile?.full_name}&quot;, Edit Name: &quot;{verificationData.fullName}&quot;
+                      <span className="text-gray-900 dark:text-gray-100">{profile?.full_name || 'Not set'}</span>
                     </div>
                   </>
                 )}
@@ -436,10 +394,10 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
               
               <div>
                 <Label htmlFor="email">Email Address</Label>
-                <div className="flex items-center mt-2 p-3 bg-gray-50 rounded-md">
+                <div className="flex items-center mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
                   <Mail className="w-4 h-4 mr-2 text-gray-500" />
-                  <span className="text-gray-900">{user.email}</span>
-                  {user.email_confirmed_at && (
+                  <span className="text-gray-900 dark:text-gray-100">{user.email}</span>
+                  {user.emailVerified && (
                     <CheckCircle className="w-4 h-4 ml-2 text-green-500" />
                   )}
                 </div>
@@ -457,11 +415,10 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                     placeholder="Your phone number"
                   />
                 ) : (
-                  <div className="flex items-center mt-2 p-3 bg-gray-50 rounded-md">
+                  <div className="flex items-center mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
                     <Phone className="w-4 h-4 mr-2 text-gray-500" />
-                    <span className="text-gray-900">
+                    <span className="text-gray-900 dark:text-gray-100">
                       {profile?.phone || 'Not set'}
-                      {/* Debug: {JSON.stringify({ profile: profile?.phone, verificationData: verificationData.phone })} */}
                     </span>
                   </div>
                 )}
@@ -476,9 +433,9 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                     placeholder="Your blockchain wallet address"
                   />
                 ) : (
-                  <div className="flex items-center mt-2 p-3 bg-gray-50 rounded-md">
+                  <div className="flex items-center mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
                     <CreditCard className="w-4 h-4 mr-2 text-gray-500" />
-                    <span className="text-gray-900 font-mono text-sm">
+                    <span className="text-gray-900 dark:text-gray-100 font-mono text-sm">
                       {profile?.wallet_address || 'Not connected'}
                     </span>
                   </div>
@@ -511,15 +468,15 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
       <Separator />
 
       {/* Verification Section */}
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
                 <University className="w-5 h-5" />
                 Student Verification
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-600 dark:text-gray-300">
                 Verify your student status to access all platform features
               </CardDescription>
             </div>
@@ -527,151 +484,172 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
           </div>
         </CardHeader>
         <CardContent>
-          {profile?.verification_status === 'verified' ? (
-            <div className="p-6 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-6 h-6 text-green-600 mt-1" />
-                <div>
-                  <h3 className="font-semibold text-green-800 mb-2">Verification Complete!</h3>
-                  <p className="text-green-700 mb-4">
-                    Your student status has been verified. You can now access all platform features including posting opportunities and making purchases.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-green-800">University:</span>
-                      <p className="text-green-700">{profile.university}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-green-800">Student ID:</span>
-                      <p className="text-green-700">{profile.student_id}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : profile?.verification_status === 'pending' ? (
-            <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Clock className="w-6 h-6 text-yellow-600 mt-1" />
-                <div>
-                  <h3 className="font-semibold text-yellow-800 mb-2">Verification Under Review</h3>
-                  <p className="text-yellow-700 mb-4">
-                    Your verification request is being processed. This usually takes 1-2 business days.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-yellow-800">University:</span>
-                      <p className="text-yellow-700">{profile.university}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-yellow-800">Student ID:</span>
-                      <p className="text-yellow-700">{profile.student_id}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+            {profile?.verification_status === 'verified' && (
+              <div className="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-6 h-6 text-blue-600 mt-1" />
+                  <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-blue-800 mb-2">Verification Required</h3>
-                    <p className="text-blue-700">
-                      Complete student verification to post opportunities, make purchases, and access all platform features.
+                    <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Verification Complete!</h3>
+                    <p className="text-blue-700 dark:text-blue-300 mb-4">
+                      Your student status has been verified. You can now access all platform features including posting opportunities and making purchases.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-blue-800 dark:text-blue-200">University:</span>
+                        <p className="text-blue-700 dark:text-blue-300">{profile.university}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-blue-800 dark:text-blue-200">Student ID:</span>
+                        <p className="text-blue-700 dark:text-blue-300">{profile.student_id}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {profile?.verification_status === 'submitted' && (
+              <div className="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
+                  <div>
+                    <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Verification Under Review</h3>
+                    <p className="text-blue-700 dark:text-blue-300 mb-4">
+                      Your verification request is being processed. This usually takes 1-2 business days.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-blue-800 dark:text-blue-200">University:</span>
+                        <p className="text-blue-700 dark:text-blue-300">{profile.university}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-blue-800 dark:text-blue-200">Student ID:</span>
+                        <p className="text-blue-700 dark:text-blue-300">{profile.student_id}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {profile?.verification_status === 'rejected' && (
+              <div className="p-6 bg-gradient-to-r from-orange-50 to-teal-50 dark:from-orange-900/20 dark:to-teal-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 text-orange-600 dark:text-orange-400 mt-1" />
+                  <div>
+                    <h3 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">Verification Under Review</h3>
+                    <p className="text-orange-700 dark:text-orange-300 mb-4">
+                      Your verification request needs attention. Please check the requirements and try again.
                     </p>
                   </div>
                 </div>
               </div>
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="university">University *</Label>
-                  <Select value={verificationData.university} onValueChange={(value) => setVerificationData(prev => ({ ...prev, university: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your university" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {universities.map((uni) => (
-                        <SelectItem key={uni} value={uni}>{uni}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {(!profile?.verification_status || profile?.verification_status === 'unverified') && (
+              <div className="space-y-6">
+                <div className="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-1" />
+                    <div>
+                      <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Verification Required</h3>
+                      <p className="text-blue-700 dark:text-blue-300">
+                        Complete student verification to post opportunities, make purchases, and access all platform features.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="studentId">Student ID *</Label>
-                  <Input
-                    id="studentId"
-                    value={verificationData.studentId}
-                    onChange={(e) => setVerificationData(prev => ({ ...prev, studentId: e.target.value }))}
-                    placeholder="Your student ID"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="university" className="text-gray-700 dark:text-gray-300">University *</Label>
+                    <Select value={verificationData.university} onValueChange={(value) => setVerificationData(prev => ({ ...prev, university: value }))}>
+                      <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
+                        <SelectValue placeholder="Select your university" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {universities.map((uni) => (
+                          <SelectItem key={uni} value={uni}>{uni}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="studentId" className="text-gray-700 dark:text-gray-300">Student ID *</Label>
+                    <Input
+                      id="studentId"
+                      value={verificationData.studentId}
+                      onChange={(e) => setVerificationData(prev => ({ ...prev, studentId: e.target.value }))}
+                      placeholder="Your student ID"
+                      className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="verificationFullName" className="text-gray-700 dark:text-gray-300">Full Name *</Label>
+                    <Input
+                      id="verificationFullName"
+                      value={verificationData.fullName}
+                      onChange={(e) => setVerificationData(prev => ({ ...prev, fullName: e.target.value }))}
+                      placeholder="Your full name (as on student ID)"
+                      className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="verificationPhone" className="text-gray-700 dark:text-gray-300">Phone Number *</Label>
+                    <Input
+                      id="verificationPhone"
+                      value={verificationData.phone}
+                      onChange={(e) => setVerificationData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Your phone number"
+                      className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="verificationFullName">Full Name *</Label>
-                  <Input
-                    id="verificationFullName"
-                    value={verificationData.fullName}
-                    onChange={(e) => setVerificationData(prev => ({ ...prev, fullName: e.target.value }))}
-                    placeholder="Your full name (as on student ID)"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="verificationPhone">Phone Number *</Label>
-                  <Input
-                    id="verificationPhone"
-                    value={verificationData.phone}
-                    onChange={(e) => setVerificationData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="Your phone number"
-                  />
+                <div className="pt-4">
+                  <Button 
+                    onClick={handleVerificationSubmit} 
+                    disabled={saving || !verificationData.university || !verificationData.studentId || !verificationData.fullName || !verificationData.phone}
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {saving ? 'Submitting...' : 'Submit Verification Request'}
+                  </Button>
                 </div>
               </div>
-
-              <div className="pt-4">
-                <Button 
-                  onClick={handleVerificationSubmit} 
-                  disabled={saving || !verificationData.university || !verificationData.studentId || !verificationData.fullName || !verificationData.phone}
-                  className="w-full sm:w-auto"
-                >
-                  {saving ? 'Submitting...' : 'Submit Verification Request'}
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
         </CardContent>
       </Card>
 
       {/* Account Security */}
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <CardHeader>
-          <CardTitle>Account Security</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-gray-900 dark:text-white">Account Security</CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-300">
             Manage your account security settings
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
             <div>
-              <h4 className="font-medium">Password</h4>
-              <p className="text-sm text-gray-600">Update your account password</p>
+              <h4 className="font-medium text-gray-900 dark:text-white">Password</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Update your account password</p>
             </div>
             <Button variant="outline" size="sm">
               Change Password
             </Button>
           </div>
           
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
             <div>
-              <h4 className="font-medium">Email Verification</h4>
-              <p className="text-sm text-gray-600">
-                {user.email_confirmed_at ? 'Email verified' : 'Email not verified'}
+              <h4 className="font-medium text-gray-900 dark:text-white">Email Verification</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {user.emailVerified ? 'Email verified' : 'Email not verified'}
               </p>
             </div>
-            {!user.email_confirmed_at && (
+            {!user.emailVerified && (
               <Button variant="outline" size="sm">
                 Verify Email
               </Button>

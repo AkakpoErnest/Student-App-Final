@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { 
+  signOutUser, 
+  onAuthStateChange, 
+  getCurrentUser, 
+  getProfile, 
+  getOpportunities as fetchFirebaseOpportunities,
+  updateProfileData,
+  User 
+} from '@/integrations/firebase/client';
 import { toast } from 'sonner';
-import { User } from '@supabase/supabase-js';
 
 interface Profile {
   id: string;
@@ -10,6 +17,7 @@ interface Profile {
   email: string;
   university: string;
   wallet_address: string;
+  verification_status?: string;
 }
 
 interface Opportunity {
@@ -38,14 +46,10 @@ export const useDashboard = () => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { profile, error } = await getProfile(userId);
 
       if (error) throw error;
-      setProfile(data);
+      setProfile(profile);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -53,14 +57,10 @@ export const useDashboard = () => {
 
   const fetchOpportunities = async () => {
     try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
+      const { opportunities, error } = await fetchFirebaseOpportunities({ status: 'active' });
 
       if (error) throw error;
-      setOpportunities(data || []);
+      setOpportunities(opportunities || []);
     } catch (error) {
       console.error('Error fetching opportunities:', error);
     }
@@ -68,21 +68,20 @@ export const useDashboard = () => {
 
   const fetchMyOpportunities = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
+      // For now, we'll fetch all opportunities and filter by user_id
+      // In a real implementation, you'd want to create a composite index
+      const { opportunities, error } = await fetchFirebaseOpportunities();
+      
       if (error) throw error;
-      setMyOpportunities(data || []);
+      const myOpps = opportunities.filter((opp: any) => opp.user_id === userId);
+      setMyOpportunities(myOpps);
     } catch (error) {
       console.error('Error fetching my opportunities:', error);
     }
   };
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await signOutUser();
     if (error) {
       toast.error('Error signing out');
     } else {
@@ -92,59 +91,74 @@ export const useDashboard = () => {
 
   const refreshData = () => {
     if (user) {
-      fetchMyOpportunities(user.id);
+      fetchMyOpportunities(user.uid);
       fetchOpportunities();
     }
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
+    let timeoutId: NodeJS.Timeout;
+    
+    const unsubscribe = onAuthStateChange((user) => {
+      if (!user) {
         navigate('/');
-      } else if (session) {
-        setUser(session.user);
-        ensureProfile(session.user);
+      } else {
+        setUser(user);
+        ensureProfile(user);
         fetchOpportunities();
-        fetchMyOpportunities(session.user.id);
+        fetchMyOpportunities(user.uid);
       }
     });
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setUser(session.user);
-        ensureProfile(session.user);
-        fetchOpportunities();
-        fetchMyOpportunities(session.user.id);
-      } else {
-        navigate('/auth');
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      ensureProfile(currentUser);
+      fetchOpportunities();
+      fetchMyOpportunities(currentUser.uid);
+    } else {
+      navigate('/auth');
+    }
+    
+    // Set a timeout to prevent infinite loading
+    timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('Dashboard loading timeout - forcing loading to false');
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    }, 15000); // 15 second timeout
 
-    return () => subscription.unsubscribe();
+    setLoading(false);
+
+    return () => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
   }, [navigate]);
 
   // Ensure profile exists for user, create if missing
   const ensureProfile = async (user: User) => {
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const { profile, error } = await getProfile(user.uid);
         
-      if (error && error.code === 'PGRST116') {
+      if (error && error === 'Profile not found') {
         // Profile doesn't exist, create it
-        const { error: insertError } = await supabase.from('profiles').insert({
-          id: user.id,
-          full_name: user.user_metadata?.full_name || '',
+        const profileData = {
+          id: user.uid,
+          full_name: user.displayName || '',
           email: user.email || '',
           verification_status: 'unverified',
           avatar_url: '',
+          university: null,
+          phone: null,
+          wallet_address: null,
+          student_id: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        });
+        };
+        
+        const { error: insertError } = await updateProfileData(user.uid, profileData);
         
         if (insertError) {
           console.error('Error creating profile:', insertError);
@@ -153,14 +167,16 @@ export const useDashboard = () => {
         }
         
         console.log('Profile created successfully');
+        // Set the profile directly instead of fetching again
+        setProfile(profileData);
       } else if (error) {
         console.error('Error fetching profile:', error);
         toast.error('Error loading user profile');
         return;
+      } else if (profile) {
+        // Profile exists, set it directly
+        setProfile(profile);
       }
-      
-      // Fetch the profile (either existing or newly created)
-      fetchProfile(user.id);
     } catch (error) {
       console.error('Error in ensureProfile:', error);
       toast.error('Error setting up user profile');

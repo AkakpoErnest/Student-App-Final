@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
-import { User as SupabaseUser } from '@supabase/supabase-js';
+import { LogOut, User as UserIcon } from 'lucide-react';
+import { User } from '@/integrations/firebase/client';
 import Logo from '@/components/Logo';
 import TokenBalance from '@/components/tokens/TokenBalance';
 import { useTokens } from '@/hooks/useTokens';
@@ -13,11 +13,12 @@ interface Profile {
   email: string;
   university: string;
   wallet_address: string;
+  verification_status?: string;
 }
 
 interface DashboardHeaderProps {
   profile: Profile;
-  user: SupabaseUser;
+  user: User;
   onSignOut: () => void;
 }
 
@@ -34,7 +35,7 @@ export const DashboardHeader = ({ profile, user, onSignOut }: DashboardHeaderPro
             {userTokens && <TokenBalance balance={userTokens.balance} />}
             
             <div className="flex items-center space-x-2">
-              <User className="w-5 h-5 text-gray-600" />
+              <UserIcon className="w-5 h-5 text-gray-600" />
               <span className="text-gray-700">{profile.full_name || profile.email}</span>
             </div>
             

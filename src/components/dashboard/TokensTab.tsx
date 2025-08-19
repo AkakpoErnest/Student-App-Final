@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Coins, Gift, Calendar, CheckCircle2, Clock, Mail, AlertCircle } from 'lucide-react';
-import { User } from '@supabase/supabase-js';
+import { User } from '@/integrations/firebase/client';
 import { useTokens } from '@/hooks/useTokens';
 import TokenBalance from '@/components/tokens/TokenBalance';
 
@@ -61,108 +61,80 @@ const TokensTab = ({ user }: TokensTabProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Debug Section - Remove this later */}
-      <Card className="border-orange-200 bg-orange-50">
-        <CardHeader>
-          <CardTitle className="text-orange-800">Debug Info</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm">
-            <div><strong>User ID:</strong> {user?.id || 'Not logged in'}</div>
-            <div><strong>User Email:</strong> {user?.email || 'N/A'}</div>
-            <div><strong>Email Verified:</strong> {user?.email_confirmed_at ? 'Yes' : 'No'}</div>
-            <div><strong>Token Record:</strong> {userTokens ? `Balance: ${userTokens.balance}` : 'No token record'}</div>
-            <div><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</div>
-            <div><strong>Today Claims:</strong> {todayClaims.length}</div>
-            <div><strong>All Time Claims:</strong> {allTimeClaims.length}</div>
-          </div>
-          <Button 
-            onClick={() => {
-              console.log('Manual refresh triggered');
-              refreshData();
-            }}
-            size="sm"
-            className="mt-4"
-          >
-            Manual Refresh
-          </Button>
-        </CardContent>
-      </Card>
-
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">StuFind Tokens</h2>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-teal-600 bg-clip-text text-transparent">StuFind Tokens</h2>
         {userTokens && <TokenBalance balance={userTokens.balance} showBlockchainInfo={true} />}
       </div>
 
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between text-gray-900 dark:text-white">
             <div className="flex items-center">
-              <Coins className="w-5 h-5 mr-2 text-yellow-500" />
+              <Coins className="w-5 h-5 mr-2 text-orange-600 dark:text-orange-400" />
               Token Balance
             </div>
             <Button 
               onClick={refreshData}
               variant="outline" 
               size="sm"
-              className="text-xs"
+              className="text-xs border-orange-200 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
             >
               Refresh
             </Button>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-600 dark:text-gray-300">
             Earn tokens by completing tasks and staying active on StuFind
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <div className="text-6xl font-bold text-blue-600 mb-2">
-              {userTokens?.balance || 0}
+            <div className="text-6xl font-bold bg-gradient-to-r from-orange-600 to-teal-600 bg-clip-text text-transparent mb-2">
+              {userTokens?.balance || 80}
             </div>
-            <p className="text-gray-600 mb-2 text-lg">StuFind Tokens</p>
-            <div className="flex items-center justify-center text-sm text-blue-600">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+            <p className="text-gray-600 dark:text-gray-400 mb-2 text-lg">StuFind Tokens</p>
+            <div className="flex items-center justify-center text-sm text-orange-600 dark:text-orange-400">
+              <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full mr-2"></div>
               Powered by Base Blockchain
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Gift className="w-5 h-5 mr-2 text-green-500" />
+          <CardTitle className="flex items-center text-gray-900 dark:text-white">
+            <Gift className="w-5 h-5 mr-2 text-orange-600 dark:text-orange-400" />
             Available Rewards
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-600 dark:text-gray-300">
             Complete tasks to earn more tokens
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {claimableTasks.map((task) => (
-              <div key={task.type} className="flex items-center justify-between p-4 border rounded-lg">
+              <div key={task.type} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
                 <div className="flex items-center space-x-3">
-                  {task.type === 'daily' && <Calendar className="w-5 h-5 text-blue-500" />}
+                  {task.type === 'daily' && <Calendar className="w-5 h-5 text-orange-600 dark:text-orange-400" />}
                   {task.type === 'email_verification' && (
                     task.isCompleted ? 
-                      <CheckCircle2 className="w-5 h-5 text-green-500" /> : 
-                      <Mail className="w-5 h-5 text-orange-500" />
+                      <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" /> : 
+                      <Mail className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                   )}
                   <div>
                     <div className="flex items-center">
-                      <h4 className="font-semibold mr-2">{task.title}</h4>
+                      <h4 className="font-semibold mr-2 text-gray-900 dark:text-white">{task.title}</h4>
                       {task.isCompleted && !task.canClaim && (
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                       )}
                       {!task.isCompleted && (
-                        <AlertCircle className="w-4 h-4 text-orange-500" />
+                        <AlertCircle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                       )}
                     </div>
-                    <p className="text-sm text-gray-600">{task.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{task.description}</p>
                     <div className="flex items-center mt-1">
-                      <Coins className="w-4 h-4 text-yellow-500 mr-1" />
-                      <span className="text-sm font-semibold text-yellow-600">+{task.tokens} tokens</span>
+                      <Coins className="w-4 h-4 text-orange-600 dark:text-orange-400 mr-1" />
+                      <span className="text-sm font-semibold text-orange-600 dark:text-orange-400">+{task.tokens} tokens</span>
                     </div>
                   </div>
                 </div>
@@ -171,18 +143,18 @@ const TokensTab = ({ user }: TokensTabProps) => {
                     <Button 
                       onClick={() => handleClaim(task.type, task.tokens)}
                       size="sm"
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-gradient-to-r from-orange-600 to-teal-600 hover:from-orange-700 hover:to-teal-700 text-white"
                       disabled={claiming === task.type}
                     >
                       {claiming === task.type ? 'Claiming...' : 'Claim Reward'}
                     </Button>
                   ) : task.isCompleted ? (
-                    <div className="flex items-center text-green-600">
+                    <div className="flex items-center text-green-600 dark:text-green-400">
                       <CheckCircle2 className="w-4 h-4 mr-1" />
                       <span className="text-sm">Claimed</span>
                     </div>
                   ) : (
-                    <div className="flex items-center text-orange-500">
+                    <div className="flex items-center text-orange-600 dark:text-orange-400">
                       <AlertCircle className="w-4 h-4 mr-1" />
                       <span className="text-sm">Complete Task</span>
                     </div>
@@ -192,7 +164,7 @@ const TokensTab = ({ user }: TokensTabProps) => {
             ))}
             
             {claimableTasks.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <Gift className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No rewards available right now.</p>
                 <p className="text-sm mt-1">Come back tomorrow for your daily bonus!</p>
@@ -202,36 +174,36 @@ const TokensTab = ({ user }: TokensTabProps) => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <CardHeader>
-          <CardTitle>How to Earn More Tokens</CardTitle>
+          <CardTitle className="text-gray-900 dark:text-white">How to Earn More Tokens</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 text-sm">
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Log in daily to claim your daily bonus (10 tokens)</span>
+              <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full mr-3"></div>
+              <span className="text-gray-700 dark:text-gray-300">Log in daily to claim your daily bonus (10 tokens)</span>
             </div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Verify your email address (100 tokens one-time)</span>
+              <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full mr-3"></div>
+              <span className="text-gray-700 dark:text-gray-300">Verify your email address (100 tokens one-time)</span>
             </div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Post opportunities and help other students</span>
+              <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full mr-3"></div>
+              <span className="text-gray-700 dark:text-gray-300">Post opportunities and help other students</span>
             </div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <span>Participate in community activities</span>
+              <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full mr-3"></div>
+              <span className="text-gray-700 dark:text-gray-300">Participate in community activities</span>
             </div>
           </div>
           
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-center text-blue-700">
-              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+          <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-teal-50 dark:from-orange-900/20 dark:to-teal-900/20 rounded-lg border border-orange-200 dark:border-orange-700">
+            <div className="flex items-center text-orange-700 dark:text-orange-300">
+              <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-teal-500 rounded-full mr-2"></div>
               <span className="font-semibold text-sm">Powered by Base Blockchain</span>
             </div>
-            <p className="text-xs text-blue-600 mt-1">
+            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
               All rewards and token actions are built on Base blockchain for transparency and decentralization.
             </p>
           </div>
