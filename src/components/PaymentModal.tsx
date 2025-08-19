@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, Smartphone, Coins, Wallet, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser, db } from '@/integrations/firebase/client';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { blockchainClient } from '@/integrations/blockchain/client';
 import { toast } from 'sonner';
 
@@ -64,24 +65,23 @@ const PaymentModal = ({ opportunity, onClose, onSuccess }: PaymentModalProps) =>
     setLoading(true);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = getCurrentUser();
       if (!user) throw new Error('Not authenticated');
 
       // Create payment record
-      const { data: payment, error: paymentError } = await supabase
-        .from('payments')
-        .insert({
-          opportunity_id: opportunity.id,
-          payer_id: user.id,
-          amount: opportunity.price,
-          currency: opportunity.currency,
-          payment_method: paymentMethod,
-          payment_status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (paymentError) throw paymentError;
+      const paymentId = `payment_${Date.now()}`;
+      const paymentData = {
+        opportunity_id: opportunity.id,
+        payer_id: user.uid,
+        amount: opportunity.price,
+        currency: opportunity.currency,
+        payment_method: paymentMethod,
+        payment_status: 'pending',
+        created_at: new Date().toISOString()
+      };
+      
+      await setDoc(doc(db, 'payments', paymentId), paymentData);
+      const payment = { id: paymentId, ...paymentData };
 
       // Handle different payment methods
       let updateData: any = { payment_status: 'completed' };
@@ -129,12 +129,7 @@ const PaymentModal = ({ opportunity, onClose, onSuccess }: PaymentModalProps) =>
       }
 
       // Update payment record
-      const { error: updateError } = await supabase
-        .from('payments')
-        .update(updateData)
-        .eq('id', payment.id);
-
-      if (updateError) throw updateError;
+      await updateDoc(doc(db, 'payments', payment.id), updateData);
 
       toast.success('Payment processed successfully!');
       onSuccess();

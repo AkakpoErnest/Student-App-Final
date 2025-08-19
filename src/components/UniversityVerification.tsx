@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { getCurrentUser, getProfile, updateProfileData } from '@/integrations/firebase/client';
 import { toast } from 'sonner';
 import { CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
@@ -31,7 +31,7 @@ const UniversityVerification = ({ onVerificationComplete, currentProfile }: Univ
     'Ashesi University',
     'University for Development Studies (UDS)',
     'University of Education, Winneba (UEW)',
-    'Ho Technical University'
+    'Ho Technical University (HTU)'
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,19 +39,16 @@ const UniversityVerification = ({ onVerificationComplete, currentProfile }: Univ
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = getCurrentUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          university: formData.university,
-          full_name: formData.fullName,
-          phone: formData.phone,
-          verification_status: 'pending',
-          student_id: formData.studentId
-        })
-        .eq('id', user.id);
+      const { error } = await updateProfileData(user.uid, {
+        university: formData.university,
+        full_name: formData.fullName,
+        phone: formData.phone,
+        verification_status: 'submitted', // Changed from 'pending' to 'submitted'
+        student_id: formData.studentId
+      });
 
       if (error) throw error;
 
@@ -64,6 +61,41 @@ const UniversityVerification = ({ onVerificationComplete, currentProfile }: Univ
     }
   };
 
+  if (currentProfile?.verification_status === 'pending' || currentProfile?.verification_status === 'submitted') {
+    return (
+      <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="flex items-center gap-2">
+          <Clock className="w-5 h-5 text-yellow-600" />
+          <div>
+            <h3 className="font-medium text-yellow-800">Verification Under Review</h3>
+            <p className="text-sm text-yellow-600">Your verification is being reviewed. You'll be able to post opportunities once approved.</p>
+            {/* Test button for development - remove in production */}
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="mt-3"
+              onClick={async () => {
+                try {
+                  const { error } = await updateProfileData(currentProfile.id, {
+                    verification_status: 'verified'
+                  });
+                  if (error) throw error;
+                  toast.success('Verification approved! (Test mode)');
+                  // Refresh the page to show updated status
+                  window.location.reload();
+                } catch (error) {
+                  toast.error('Error updating verification status');
+                }
+              }}
+            >
+              🧪 Test: Approve Verification
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (currentProfile?.verification_status === 'verified') {
     return (
       <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -72,20 +104,6 @@ const UniversityVerification = ({ onVerificationComplete, currentProfile }: Univ
           <div>
             <h3 className="font-medium text-green-800">Verified Student</h3>
             <p className="text-sm text-green-600">{currentProfile.university}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (currentProfile?.verification_status === 'pending') {
-    return (
-      <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-yellow-600" />
-          <div>
-            <h3 className="font-medium text-yellow-800">Verification Pending</h3>
-            <p className="text-sm text-yellow-600">Your verification is under review</p>
           </div>
         </div>
       </div>

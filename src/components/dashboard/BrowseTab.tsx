@@ -32,10 +32,10 @@ const BrowseTab = ({ opportunities }: BrowseTabProps) => {
   };
 
   return (
-    <Card>
+    <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
       <CardHeader>
-        <CardTitle>Available Opportunities</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-gray-900 dark:text-white">Available Opportunities</CardTitle>
+        <CardDescription className="text-gray-600 dark:text-gray-300">
           Browse jobs, internships, and items from students across Ghana
         </CardDescription>
       </CardHeader>
@@ -51,7 +51,7 @@ const BrowseTab = ({ opportunities }: BrowseTabProps) => {
             />
           ))}
           {opportunities.length === 0 && (
-            <div className="col-span-full text-center py-12 text-gray-500">
+            <div className="col-span-full text-center py-12 text-gray-500 dark:text-gray-400">
               <p className="mb-4">No opportunities available at the moment.</p>
               <Link to="/marketplace">
                 <Button variant="outline">Browse Marketplace</Button>

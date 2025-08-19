@@ -74,22 +74,22 @@ const Index = () => {
 
   const testimonials = [
     {
-      name: "Kwame Asante",
-      university: "KNUST",
-      role: "Computer Science Student",
+      name: "Ernest Akakpo",
+      university: "University of Ghana",
+      role: "Web3 Developer",
       text: "Found my dream internship through StuFind! The platform made it so easy to connect with companies looking for students.",
       rating: 5
     },
     {
       name: "Ama Mensah",
-      university: "University of Ghana",
+      university: "Ho Technical University (HTU)",
       role: "Business Student",
       text: "Sold my old laptop in just 2 days. The student verification feature gives buyers confidence.",
       rating: 5
     },
     {
       name: "Kofi Osei",
-      university: "Ashesi",
+      university: "Ashesi University",
       role: "Engineering Student",
       text: "The job opportunities here are actually relevant to students. Much better than generic job sites.",
       rating: 5

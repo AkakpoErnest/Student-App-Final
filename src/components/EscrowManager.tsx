@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Shield, CheckCircle, XCircle, Clock, Wallet, AlertTriangle } from 'lucide-react';
 import { blockchainClient } from '@/integrations/blockchain/client';
-import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/firebase/client';
+import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { toast } from 'sonner';
 
 interface EscrowTransaction {
@@ -38,31 +39,49 @@ const EscrowManager = ({ user }: EscrowManagerProps) => {
   const fetchEscrows = async () => {
     try {
       // Fetch escrow transactions where user is buyer or seller
-      const { data, error } = await supabase
-        .from('payments')
-        .select(`
-          *,
-          opportunities (
-            title,
-            user_id
-          )
-        `)
-        .or(`payer_id.eq.${user.id},opportunities.user_id.eq.${user.id}`)
-        .not('transaction_hash', 'is', null);
+      const paymentsRef = collection(db, 'payments');
+      const q = query(
+        paymentsRef,
+        where('transaction_hash', '!=', null)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const payments = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-      if (error) throw error;
+      // Filter payments where user is buyer or seller
+      const userPayments = payments.filter(payment => 
+        payment.payer_id === user.uid || payment.seller_id === user.uid
+      );
 
-      const escrowTransactions: EscrowTransaction[] = data?.map(payment => ({
-        id: payment.id,
-        escrow_id: payment.transaction_hash || payment.id,
-        opportunity_id: payment.opportunity_id,
-        buyer_id: payment.payer_id,
-        seller_id: payment.opportunities?.user_id || '',
-        amount: payment.amount,
-        status: (payment.payment_status === 'completed' ? 'pending' : payment.payment_status) as 'pending' | 'released' | 'refunded',
-        created_at: payment.created_at,
-        blockchain_details: null
-      })) || [];
+      // Fetch opportunities for these payments
+      const opportunitiesRef = collection(db, 'opportunities');
+      const opportunityIds = [...new Set(userPayments.map(p => p.opportunity_id))];
+      
+      const opportunities = [];
+      for (const oppId of opportunityIds) {
+        const oppDoc = await getDoc(doc(db, 'opportunities', oppId));
+        if (oppDoc.exists()) {
+          opportunities.push({ id: oppId, ...oppDoc.data() });
+        }
+      }
+
+      const escrowTransactions: EscrowTransaction[] = userPayments.map(payment => {
+        const opportunity = opportunities.find(opp => opp.id === payment.opportunity_id);
+        return {
+          id: payment.id,
+          escrow_id: payment.transaction_hash || payment.id,
+          opportunity_id: payment.opportunity_id,
+          buyer_id: payment.payer_id,
+          seller_id: opportunity?.user_id || '',
+          amount: payment.amount,
+          status: (payment.payment_status === 'completed' ? 'pending' : payment.payment_status) as 'pending' | 'released' | 'refunded',
+          created_at: payment.created_at,
+          blockchain_details: null
+        };
+      });
 
       // Fetch blockchain details for each escrow
       for (const escrow of escrowTransactions) {
@@ -94,10 +113,9 @@ const EscrowManager = ({ user }: EscrowManagerProps) => {
       
       if (success) {
         // Update database
-        await supabase
-          .from('payments')
-          .update({ payment_status: 'released' })
-          .eq('transaction_hash', escrow.escrow_id);
+        await updateDoc(doc(db, 'payments', escrow.id), { 
+          payment_status: 'released' 
+        });
 
         toast.success('Funds released successfully!');
         fetchEscrows();
@@ -123,10 +141,9 @@ const EscrowManager = ({ user }: EscrowManagerProps) => {
       
       if (success) {
         // Update database
-        await supabase
-          .from('payments')
-          .update({ payment_status: 'refunded' })
-          .eq('transaction_hash', escrow.escrow_id);
+        await updateDoc(doc(db, 'payments', escrow.id), { 
+          payment_status: 'refunded' 
+        });
 
         toast.success('Buyer refunded successfully!');
         fetchEscrows();
@@ -154,8 +171,8 @@ const EscrowManager = ({ user }: EscrowManagerProps) => {
     }
   };
 
-  const isBuyer = (escrow: EscrowTransaction) => escrow.buyer_id === user.id;
-  const isSeller = (escrow: EscrowTransaction) => escrow.seller_id === user.id;
+  const isBuyer = (escrow: EscrowTransaction) => escrow.buyer_id === user.uid;
+  const isSeller = (escrow: EscrowTransaction) => escrow.seller_id === user.uid;
 
   if (loading) {
     return (

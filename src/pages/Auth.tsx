@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { signUp, signIn, onAuthStateChange } from '@/integrations/firebase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,14 +22,14 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+    const unsubscribe = onAuthStateChange((user) => {
+      if (user) {
         toast.success('Welcome to StuFind!');
         navigate('/dashboard');
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -50,31 +50,15 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-          data: {
-            full_name: fullName.trim(),
-          }
-        }
+      const { user, error } = await signUp(email.trim(), password, {
+        full_name: fullName.trim(),
       });
 
       if (error) {
-        toast.error(error.message);
-      } else if (data.user) {
-        // Try to create profile
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: data.user.id,
-          full_name: fullName.trim(),
-        });
-        
-        if (profileError) {
-          console.warn('Profile creation warning:', profileError);
-        }
-        
-        toast.success('Account created! Check your email to verify your account.');
+        toast.error(error.message || 'Error creating account');
+      } else if (user) {
+        toast.success('Account created successfully! Welcome to StuFind!');
+        navigate('/dashboard');
       }
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -98,19 +82,19 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const { user, error } = await signIn(email.trim(), password);
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
+        if (error.message?.includes('Invalid login credentials') || error.message?.includes('user-not-found')) {
           toast.error('Incorrect email or password. Please try again.');
-        } else if (error.message.includes('Email not confirmed')) {
-          toast.error('Please check your email and click the confirmation link.');
+        } else if (error.message?.includes('wrong-password')) {
+          toast.error('Incorrect email or password. Please try again.');
         } else {
-          toast.error(error.message);
+          toast.error(error.message || 'Error signing in');
         }
+      } else if (user) {
+        toast.success('Welcome back!');
+        navigate('/dashboard');
       }
     } catch (error: any) {
       console.error('Signin error:', error);
