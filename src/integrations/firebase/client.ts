@@ -20,6 +20,12 @@ import {
   orderBy,
   limit
 } from 'firebase/firestore';
+import { 
+  ref, 
+  uploadBytes, 
+  getDownloadURL, 
+  deleteObject 
+} from 'firebase/storage';
 import { auth, db, storage } from './config';
 
 // Export Firebase user type
@@ -129,7 +135,7 @@ export const getOpportunities = async (filters?: any) => {
     // Remove orderBy to avoid index requirements - we'll sort client-side
     const querySnapshot = await getDocs(q);
     const opportunities = querySnapshot.docs.map(doc => {
-      const data = doc.data();
+      const data = doc.data() as any;
       return {
         id: doc.id,
         ...data
@@ -159,5 +165,44 @@ export const createOpportunity = async (data: any) => {
     return { id: docRef.id, error: null };
   } catch (error) {
     return { id: null, error };
+  }
+};
+
+// Storage functions
+export const uploadImage = async (file: File, path: string) => {
+  try {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return { url: downloadURL, error: null };
+  } catch (error) {
+    return { url: null, error };
+  }
+};
+
+export const deleteImage = async (path: string) => {
+  try {
+    const storageRef = ref(storage, path);
+    await deleteObject(storageRef);
+    return { error: null };
+  } catch (error) {
+    return { error };
+  }
+};
+
+export const uploadAvatar = async (userId: string, file: File) => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}.${fileExt}`;
+    const path = `avatars/${fileName}`;
+    
+    const { url, error } = await uploadImage(file, path);
+    if (error) {
+      throw error;
+    }
+    
+    return { url, error: null };
+  } catch (error) {
+    return { url: null, error };
   }
 };

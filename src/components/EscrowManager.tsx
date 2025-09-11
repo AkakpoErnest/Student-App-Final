@@ -1,353 +1,143 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Shield, CheckCircle, XCircle, Clock, Wallet, AlertTriangle } from 'lucide-react';
-import { blockchainClient } from '@/integrations/blockchain/client';
-import { db } from '@/integrations/firebase/client';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { toast } from 'sonner';
-
-interface EscrowTransaction {
-  id: string;
-  escrow_id: string;
-  opportunity_id: string;
-  buyer_id: string;
-  seller_id: string;
-  amount: number;
-  status: 'pending' | 'released' | 'refunded';
-  created_at: string;
-  blockchain_details?: any;
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Shield, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle, 
+  Truck, 
+  CreditCard, 
+  Users, 
+  TrendingUp,
+  Phone,
+  Building,
+  Wallet,
+  Smartphone
+} from 'lucide-react';
 
 interface EscrowManagerProps {
   user: any;
 }
 
 const EscrowManager = ({ user }: EscrowManagerProps) => {
-  const [escrows, setEscrows] = useState<EscrowTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedEscrow, setSelectedEscrow] = useState<EscrowTransaction | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-
-  useEffect(() => {
-    fetchEscrows();
-  }, [user]);
-
-  const fetchEscrows = async () => {
-    try {
-      // Fetch escrow transactions where user is buyer or seller
-      const paymentsRef = collection(db, 'payments');
-      const q = query(
-        paymentsRef,
-        where('transaction_hash', '!=', null)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const payments = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      // Filter payments where user is buyer or seller
-      const userPayments = payments.filter(payment => 
-        payment.payer_id === user.uid || payment.seller_id === user.uid
-      );
-
-      // Fetch opportunities for these payments
-      const opportunitiesRef = collection(db, 'opportunities');
-      const opportunityIds = [...new Set(userPayments.map(p => p.opportunity_id))];
-      
-      const opportunities = [];
-      for (const oppId of opportunityIds) {
-        const oppDoc = await getDoc(doc(db, 'opportunities', oppId));
-        if (oppDoc.exists()) {
-          opportunities.push({ id: oppId, ...oppDoc.data() });
-        }
-      }
-
-      const escrowTransactions: EscrowTransaction[] = userPayments.map(payment => {
-        const opportunity = opportunities.find(opp => opp.id === payment.opportunity_id);
-        return {
-          id: payment.id,
-          escrow_id: payment.transaction_hash || payment.id,
-          opportunity_id: payment.opportunity_id,
-          buyer_id: payment.payer_id,
-          seller_id: opportunity?.user_id || '',
-          amount: payment.amount,
-          status: (payment.payment_status === 'completed' ? 'pending' : payment.payment_status) as 'pending' | 'released' | 'refunded',
-          created_at: payment.created_at,
-          blockchain_details: null
-        };
-      });
-
-      // Fetch blockchain details for each escrow
-      for (const escrow of escrowTransactions) {
-        try {
-          const details = await blockchainClient.getEscrowDetails(escrow.escrow_id);
-          escrow.blockchain_details = details;
-        } catch (error) {
-          console.error('Error fetching escrow details:', error);
-        }
-      }
-
-      setEscrows(escrowTransactions);
-    } catch (error) {
-      console.error('Error fetching escrows:', error);
-      toast.error('Failed to load escrow transactions');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReleaseFunds = async (escrow: EscrowTransaction) => {
-    if (!confirm('Are you sure you want to release funds to the seller? This action cannot be undone.')) {
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      const success = await blockchainClient.releaseFunds(escrow.escrow_id);
-      
-      if (success) {
-        // Update database
-        await updateDoc(doc(db, 'payments', escrow.id), { 
-          payment_status: 'released' 
-        });
-
-        toast.success('Funds released successfully!');
-        fetchEscrows();
-      } else {
-        toast.error('Failed to release funds');
-      }
-    } catch (error) {
-      console.error('Error releasing funds:', error);
-      toast.error('Failed to release funds');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleRefundBuyer = async (escrow: EscrowTransaction) => {
-    if (!confirm('Are you sure you want to refund the buyer? This action cannot be undone.')) {
-      return;
-    }
-
-    setActionLoading(true);
-    try {
-      const success = await blockchainClient.refundBuyer(escrow.escrow_id);
-      
-      if (success) {
-        // Update database
-        await updateDoc(doc(db, 'payments', escrow.id), { 
-          payment_status: 'refunded' 
-        });
-
-        toast.success('Buyer refunded successfully!');
-        fetchEscrows();
-      } else {
-        toast.error('Failed to refund buyer');
-      }
-    } catch (error) {
-      console.error('Error refunding buyer:', error);
-      toast.error('Failed to refund buyer');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="text-orange-600 border-orange-200"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
-      case 'released':
-        return <Badge variant="outline" className="text-green-600 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Released</Badge>;
-      case 'refunded':
-        return <Badge variant="outline" className="text-red-600 border-red-200"><XCircle className="w-3 h-3 mr-1" />Refunded</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-
-  const isBuyer = (escrow: EscrowTransaction) => escrow.buyer_id === user.uid;
-  const isSeller = (escrow: EscrowTransaction) => escrow.seller_id === user.uid;
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Escrow Transactions</h2>
-        <div className="flex items-center text-sm text-blue-600">
-          <Shield className="w-4 h-4 mr-2" />
-          Powered by Base Blockchain
-        </div>
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Escrow System</h2>
+        <p className="text-gray-600 dark:text-gray-400">Secure payment protection for all transactions</p>
       </div>
 
-      {escrows.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Shield className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-semibold mb-2">No Escrow Transactions</h3>
-            <p className="text-gray-600">You don't have any escrow transactions yet.</p>
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="bg-gradient-to-r from-orange-50 to-teal-50 dark:from-orange-900/20 dark:to-teal-900/20 border-orange-200 dark:border-orange-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Active Transactions</p>
+                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">0</p>
+              </div>
+              <Shield className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+            </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="space-y-4">
-          {escrows.map((escrow) => (
-            <Card key={escrow.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <Shield className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <h3 className="font-semibold">Escrow #{escrow.escrow_id.slice(0, 8)}</h3>
-                      <p className="text-sm text-gray-600">Created {new Date(escrow.created_at).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  {getStatusBadge(escrow.status)}
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Amount</p>
-                    <p className="font-semibold">${escrow.amount}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Your Role</p>
-                    <p className="font-semibold">{isBuyer(escrow) ? 'Buyer' : 'Seller'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Status</p>
-                    <p className="font-semibold capitalize">{escrow.status}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedEscrow(escrow);
-                      setShowDetails(true);
-                    }}
-                  >
-                    View Details
-                  </Button>
-
-                  {escrow.status === 'pending' && (
-                    <div className="flex space-x-2">
-                      {isBuyer(escrow) && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRefundBuyer(escrow)}
-                          disabled={actionLoading}
-                          className="text-red-600 border-red-200 hover:bg-red-50"
-                        >
-                          <XCircle className="w-4 h-4 mr-1" />
-                          Request Refund
-                        </Button>
-                      )}
-                      {isSeller(escrow) && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleReleaseFunds(escrow)}
-                          disabled={actionLoading}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Release Funds
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Escrow Details Dialog */}
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Escrow Details</DialogTitle>
-            <DialogDescription>
-              Blockchain transaction details for this escrow
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedEscrow && (
-            <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold mb-2">Transaction Info</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Escrow ID:</span>
-                    <span className="font-mono">{selectedEscrow.escrow_id}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Amount:</span>
-                    <span>${selectedEscrow.amount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Status:</span>
-                    <span className="capitalize">{selectedEscrow.status}</span>
-                  </div>
-                </div>
+        <Card className="bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 border-teal-200 dark:border-teal-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-teal-600 dark:text-teal-400">Completed</p>
+                <p className="text-2xl font-bold text-teal-700 dark:text-teal-300">0</p>
               </div>
-
-              {selectedEscrow.blockchain_details && (
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-semibold mb-2 text-blue-700">Blockchain Details</h4>
-                  <div className="space-y-2 text-sm text-blue-700">
-                    <div className="flex justify-between">
-                      <span>Buyer:</span>
-                      <span className="font-mono">{selectedEscrow.blockchain_details.buyer.slice(0, 6)}...{selectedEscrow.blockchain_details.buyer.slice(-4)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Seller:</span>
-                      <span className="font-mono">{selectedEscrow.blockchain_details.seller.slice(0, 6)}...{selectedEscrow.blockchain_details.seller.slice(-4)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Released:</span>
-                      <span>{selectedEscrow.blockchain_details.released ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Refunded:</span>
-                      <span>{selectedEscrow.blockchain_details.refunded ? 'Yes' : 'No'}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center text-sm text-gray-600">
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                <span>All transactions are secured by Base blockchain</span>
-              </div>
+              <CheckCircle className="h-8 w-8 text-teal-600 dark:text-teal-400" />
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Volume</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">GH₵ 0</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* How Escrow Works */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-orange-600" />
+            How Escrow Works
+          </CardTitle>
+          <CardDescription>
+            Secure your transactions with our Ghana Cedis escrow system
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CreditCard className="h-6 w-6 text-orange-600" />
+              </div>
+              <h3 className="font-semibold text-orange-800 dark:text-orange-200 mb-1">1. Payment</h3>
+              <p className="text-sm text-orange-600 dark:text-orange-300">Buyer pays via Mobile Money</p>
+            </div>
+            
+            <div className="text-center p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
+              <div className="w-12 h-12 bg-teal-100 dark:bg-teal-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Shield className="h-6 w-6 text-teal-600" />
+              </div>
+              <h3 className="font-semibold text-teal-800 dark:text-teal-200 mb-1">2. Secure Hold</h3>
+              <p className="text-sm text-teal-600 dark:text-teal-300">Funds held safely in escrow</p>
+            </div>
+            
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Truck className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">3. Delivery</h3>
+              <p className="text-sm text-blue-600 dark:text-blue-300">Item delivered to buyer</p>
+            </div>
+            
+            <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-green-800 dark:text-green-200 mb-1">4. Release</h3>
+              <p className="text-sm text-green-600 dark:text-green-300">Payment released to seller</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Coming Soon Message */}
+      <Card className="border-dashed border-2 border-gray-300 dark:border-gray-600">
+        <CardContent className="p-8 text-center">
+          <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            Escrow System Coming Soon
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            We're working on implementing a secure Ghana Cedis escrow system with Mobile Money integration.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Badge variant="outline" className="text-xs">Mobile Money</Badge>
+            <Badge variant="outline" className="text-xs">Bank Transfer</Badge>
+            <Badge variant="outline" className="text-xs">Secure Payments</Badge>
+            <Badge variant="outline" className="text-xs">Auto Release</Badge>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-export default EscrowManager; 
+export default EscrowManager;

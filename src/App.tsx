@@ -13,6 +13,10 @@ import Dashboard from "./pages/Dashboard";
 import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
 import PostOpportunityPage from "./pages/PostOpportunityPage";
+import WhatsAppBot from "./pages/WhatsAppBot";
+import BotTest from "./pages/BotTest";
+import APITest from "./pages/APITest";
+// MoMoTest temporarily disabled
 
 const queryClient = new QueryClient();
 
@@ -31,6 +35,10 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/post-opportunity" element={<PostOpportunityPage />} />
+            <Route path="/whatsapp-bot" element={<WhatsAppBot />} />
+            <Route path="/bot-test" element={<BotTest />} />
+            <Route path="/api-test" element={<APITest />} />
+            {/* MoMoTest temporarily disabled */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

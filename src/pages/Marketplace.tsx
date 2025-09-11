@@ -11,6 +11,7 @@ import { User } from "@/integrations/firebase/client";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 import OpportunityCard from "@/components/OpportunityCard";
+// EscrowInitiation temporarily disabled
 
 interface Opportunity {
   id: string;
@@ -40,6 +41,7 @@ const Marketplace = () => {
   const [university, setUniversity] = useState("all");
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  // Escrow functionality temporarily disabled
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,6 +66,8 @@ const Marketplace = () => {
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
+
+  // Escrow functionality temporarily disabled
 
   const fetchOpportunities = async () => {
     try {
@@ -655,11 +659,20 @@ const Marketplace = () => {
                             <span className="text-sm text-gray-500 ml-1">/month</span>
                           )}
                         </div>
-                        <Link to={`/product/${item.id}`}>
-                          <Button size="sm" className="btn-warm rounded-xl shadow-lg hover:shadow-xl transition-all">
-                            {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? 'Apply Now' : 'View Details'}
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            className="bg-gradient-to-r from-orange-600 to-teal-600 hover:from-orange-700 hover:to-teal-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
+                          >
+                            {item.opportunity_type === 'job' ? 'Apply Now' : 
+                             item.opportunity_type === 'internship' ? 'Apply Now' : 'Buy Now'}
                           </Button>
-                        </Link>
+                          <Link to={`/product/${item.id}`}>
+                            <Button size="sm" variant="outline" className="rounded-xl shadow-lg hover:shadow-xl transition-all">
+                              View Details
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </CardFooter>
                   </>
@@ -734,11 +747,20 @@ const Marketplace = () => {
                             <div className="text-xs text-gray-500">/month</div>
                           )}
                         </div>
-                        <Link to={`/product/${item.id}`}>
-                          <Button size="sm" className="btn-warm rounded-xl w-full">
-                            {item.opportunity_type === 'job' || item.opportunity_type === 'internship' ? 'Apply' : 'View'}
+                        <div className="space-y-2">
+                          <Button 
+                            size="sm" 
+                            className="bg-gradient-to-r from-orange-600 to-teal-600 hover:from-orange-700 hover:to-teal-700 text-white rounded-xl w-full"
+                          >
+                            {item.opportunity_type === 'job' ? 'Apply Now' : 
+                             item.opportunity_type === 'internship' ? 'Apply Now' : 'Buy Now'}
                           </Button>
-                        </Link>
+                          <Link to={`/product/${item.id}`}>
+                            <Button size="sm" variant="outline" className="rounded-xl w-full">
+                              View Details
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -781,6 +803,8 @@ const Marketplace = () => {
             </Button>
           </div>
         )}
+
+        {/* Escrow functionality temporarily disabled */}
       </div>
     </div>
   );

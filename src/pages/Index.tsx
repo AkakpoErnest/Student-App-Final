@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Users, Shield, Zap, Star, CheckCircle, TrendingUp, Coins, Search, MapPin, Calendar, Clock, Briefcase, GraduationCap, BookOpen, Smartphone, Laptop, MonitorSpeaker } from 'lucide-react';
+import { ArrowRight, Users, Shield, Zap, Star, CheckCircle, TrendingUp, Coins, Search, MapPin, Calendar, Clock, Briefcase, GraduationCap, BookOpen, Smartphone, Laptop, MonitorSpeaker, Sparkles, MessageSquare, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import Logo from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import AIAssistant from '@/components/AIAssistant';
 
 const Index = () => {
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+
   const featuredItems = [
     {
       id: 1,
@@ -111,6 +114,9 @@ const Index = () => {
               <Link to="/how-it-works" className="nav-link">
                 How It Works
               </Link>
+              <Link to="/whatsapp-bot" className="nav-link">
+                WhatsApp Bot
+              </Link>
             </nav>
             <div className="flex items-center space-x-4">
               <ThemeToggle />
@@ -178,6 +184,16 @@ const Index = () => {
                       <span className="relative">Start Selling</span>
                     </Link>
                   </Button>
+                  <Button 
+                    onClick={() => setIsAIAssistantOpen(true)}
+                    size="lg" 
+                    className="text-base lg:text-lg px-6 lg:px-8 py-3 lg:py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-xl"
+                  >
+                    <span className="flex items-center">
+                      <Sparkles className="mr-2 w-4 h-4 lg:w-5 lg:h-5" />
+                      Ask AI Assistant
+                    </span>
+                  </Button>
                 </div>
 
                 <div className="flex items-center space-x-8 text-sm text-gray-500">
@@ -223,6 +239,75 @@ const Index = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Assistant Feature */}
+      <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              Meet Your AI Assistant
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              Get instant help with any questions about StuFind. Our AI assistant knows everything about buying, selling, verification, and more!
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Smart Help
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Ask questions about how to use StuFind, find items, or get help with verification.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-600 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Instant Answers
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Get immediate responses to your questions about the platform, features, and policies.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white dark:bg-gray-800 border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <HelpCircle className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  24/7 Available
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Always available to help you navigate StuFind and make the most of your experience.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <Button 
+              onClick={() => setIsAIAssistantOpen(true)}
+              size="lg" 
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-xl shadow-lg"
+            >
+              <Sparkles className="mr-2 w-5 h-5" />
+              Try AI Assistant Now
+            </Button>
           </div>
         </div>
       </section>
@@ -489,6 +574,19 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {/* AI Assistant */}
+      <AIAssistant
+        isOpen={isAIAssistantOpen}
+        onClose={() => setIsAIAssistantOpen(false)}
+        onToggle={() => setIsAIAssistantOpen(!isAIAssistantOpen)}
+        context={{
+          currentPage: 'home',
+          userType: 'guest',
+          university: 'Not specified',
+          verificationStatus: 'Not verified'
+        }}
+      />
     </div>
   );
 };

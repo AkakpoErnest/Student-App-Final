@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { getProfile, updateProfileData, db } from '@/integrations/firebase/client';
+import { getProfile, updateProfileData, db, uploadAvatar, uploadImage } from '@/integrations/firebase/client';
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { sendEmailVerification, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { toast } from 'sonner';
 import { CheckCircle, AlertCircle, Clock, User as UserIcon, Mail, Phone, University, CreditCard, Edit, Upload as UploadIcon, BarChart3 } from 'lucide-react';
 
@@ -50,6 +51,94 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
     phone: ''
   });
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [emailVerifying, setEmailVerifying] = useState(false);
+  const [passwordChanging, setPasswordChanging] = useState(false);
+
+  // Test function to debug Firebase Storage
+  const testFirebaseStorage = async () => {
+    try {
+      console.log('Testing Firebase Storage...');
+      const testFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
+      const { url, error } = await uploadImage(testFile, 'test/test.txt');
+      console.log('Test upload result:', { url, error });
+      if (error) {
+        toast.error('Firebase Storage test failed: ' + error.message);
+      } else {
+        toast.success('Firebase Storage is working!');
+      }
+    } catch (error: any) {
+      console.error('Firebase Storage test error:', error);
+      toast.error('Firebase Storage test error: ' + error.message);
+    }
+  };
+
+  // Handle email verification
+  const handleEmailVerification = async () => {
+    if (!user) return;
+    
+    setEmailVerifying(true);
+    try {
+      await sendEmailVerification(user);
+      toast.success('Verification email sent! Please check your inbox and spam folder.');
+    } catch (error: any) {
+      console.error('Email verification error:', error);
+      toast.error('Failed to send verification email: ' + (error.message || 'Unknown error'));
+    } finally {
+      setEmailVerifying(false);
+    }
+  };
+
+  // Handle password change
+  const handlePasswordChange = async () => {
+    const newPassword = prompt('Enter your new password (minimum 6 characters):');
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
+    const currentPassword = prompt('Enter your current password to confirm:');
+    if (!currentPassword) {
+      toast.error('Current password is required');
+      return;
+    }
+
+    setPasswordChanging(true);
+    try {
+      // Re-authenticate user
+      const credential = EmailAuthProvider.credential(user.email!, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      
+      // Update password
+      await updatePassword(user, newPassword);
+      toast.success('Password updated successfully!');
+    } catch (error: any) {
+      console.error('Password change error:', error);
+      if (error.code === 'auth/wrong-password') {
+        toast.error('Current password is incorrect');
+      } else if (error.code === 'auth/weak-password') {
+        toast.error('Password is too weak. Please choose a stronger password.');
+      } else {
+        toast.error('Failed to update password: ' + (error.message || 'Unknown error'));
+      }
+    } finally {
+      setPasswordChanging(false);
+    }
+  };
+
+  // Refresh email verification status
+  const refreshEmailStatus = async () => {
+    try {
+      await user.reload();
+      if (user.emailVerified) {
+        toast.success('Email verified successfully!');
+      } else {
+        toast.info('Email not yet verified. Please check your inbox.');
+      }
+    } catch (error: any) {
+      console.error('Error refreshing email status:', error);
+      toast.error('Failed to refresh email status');
+    }
+  };
 
   const universities = [
     'University of Ghana (UG)',
@@ -64,6 +153,22 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
 
   useEffect(() => {
     fetchProfile();
+  }, [user]);
+
+  // Check email verification status periodically
+  useEffect(() => {
+    if (user && !user.emailVerified) {
+      const interval = setInterval(() => {
+        user.reload().then(() => {
+          if (user.emailVerified) {
+            toast.success('Email verified successfully!');
+            clearInterval(interval);
+          }
+        }).catch(console.error);
+      }, 5000); // Check every 5 seconds
+
+      return () => clearInterval(interval);
+    }
   }, [user]);
 
   const fetchProfile = async () => {
@@ -227,7 +332,12 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   // Handle avatar upload
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+    
+    console.log('File selected:', file.name, file.size, file.type);
     
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
@@ -243,16 +353,27 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
     
     setAvatarUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `avatars/${user.uid}.${fileExt}`;
+      console.log('Starting avatar upload for user:', user.uid);
       
-      // For now, we'll use a placeholder URL since Firebase Storage setup is more complex
-      // In a real implementation, you'd use Firebase Storage upload
-      const publicUrl = `https://via.placeholder.com/150x150?text=${user.displayName?.charAt(0) || 'U'}`;
+      // Upload image to Firebase Storage
+      const { url, error: uploadError } = await uploadAvatar(user.uid, file);
+      
+      console.log('Upload result:', { url, uploadError });
+      
+      if (uploadError) {
+        console.error('Avatar upload error:', uploadError);
+        throw uploadError;
+      }
+      
+      if (!url) {
+        throw new Error('Failed to get upload URL');
+      }
+      
+      console.log('Upload successful, updating profile with URL:', url);
       
       // Update profile with new avatar URL
       const { error } = await updateProfileData(user.uid, { 
-        avatar_url: publicUrl,
+        avatar_url: url,
         updated_at: new Date().toISOString()
       });
         
@@ -263,8 +384,9 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
       
       // Update local state
       if (profile) {
-        const updatedProfile = { ...profile, avatar_url: publicUrl };
+        const updatedProfile = { ...profile, avatar_url: url };
         setProfile(updatedProfile);
+        console.log('Profile updated locally:', updatedProfile);
       }
       toast.success('Profile picture updated successfully!');
     } catch (error: any) {
@@ -335,14 +457,26 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <img
-                  src={DEFAULT_AVATAR}
+                  src={profile?.avatar_url || DEFAULT_AVATAR}
                   alt="Profile Avatar"
                   className="w-16 h-16 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                  onError={(e) => {
+                    console.log('Image load error, falling back to default avatar');
+                    e.currentTarget.src = DEFAULT_AVATAR;
+                  }}
                 />
                 <label className="absolute bottom-0 right-0 bg-white dark:bg-gray-800 rounded-full p-1 cursor-pointer border border-gray-300 dark:border-gray-600 shadow" title="Upload new profile picture">
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={avatarUploading} />
                   <UploadIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </label>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={testFirebaseStorage}
+                  className="absolute top-0 right-0 text-xs"
+                >
+                  Test Storage
+                </Button>
                 {avatarUploading && (
                   <div className="absolute inset-0 bg-white/70 dark:bg-black/70 flex items-center justify-center rounded-full">
                     <div className="animate-spin h-6 w-6 border-b-2 border-blue-600"></div>
@@ -637,8 +771,13 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
               <h4 className="font-medium text-gray-900 dark:text-white">Password</h4>
               <p className="text-sm text-gray-600 dark:text-gray-400">Update your account password</p>
             </div>
-            <Button variant="outline" size="sm">
-              Change Password
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handlePasswordChange}
+              disabled={passwordChanging}
+            >
+              {passwordChanging ? 'Updating...' : 'Change Password'}
             </Button>
           </div>
           
@@ -649,11 +788,34 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                 {user.emailVerified ? 'Email verified' : 'Email not verified'}
               </p>
             </div>
-            {!user.emailVerified && (
-              <Button variant="outline" size="sm">
-                Verify Email
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {!user.emailVerified && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleEmailVerification}
+                    disabled={emailVerifying}
+                  >
+                    {emailVerifying ? 'Sending...' : 'Verify Email'}
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={refreshEmailStatus}
+                    title="Refresh verification status"
+                  >
+                    <Clock className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+              {user.emailVerified && (
+                <div className="flex items-center text-green-600 dark:text-green-400">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Verified</span>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

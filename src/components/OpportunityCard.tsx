@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Clock, User, ShoppingCart, Briefcase, CheckCircle, Eye, Edit, Trash2 } from 'lucide-react';
+import { MapPin, Clock, User, ShoppingCart, Briefcase, CheckCircle, Eye, Edit, Trash2, Shield } from 'lucide-react';
 import { db } from '@/integrations/firebase/client';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
@@ -250,24 +250,35 @@ const OpportunityCard = ({ opportunity, showPayButton = true, isOwner = false, o
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          {opportunity.opportunity_type === 'item' && showPayButton && !isOwner ? (
-            <Button 
-              onClick={handlePayment}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Buy Now
-            </Button>
-          ) : opportunity.opportunity_type === 'job' && showPayButton && !isOwner ? (
-            <Button 
-              onClick={() => handleApply(opportunity)}
-              variant="outline" 
-              className="flex-1"
-            >
-              <Briefcase className="w-4 h-4 mr-2" />
-              Apply Now
-            </Button>
-          ) : null}
+          {showPayButton && !isOwner && (
+            <>
+              {opportunity.opportunity_type === 'item' ? (
+                <Button 
+                  onClick={() => onPayClick?.()}
+                  className="flex-1 bg-gradient-to-r from-orange-600 to-teal-600 hover:from-orange-700 hover:to-teal-700 text-white"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Buy with Escrow
+                </Button>
+              ) : opportunity.opportunity_type === 'job' ? (
+                <Button 
+                  onClick={() => onPayClick?.()}
+                  className="flex-1 bg-gradient-to-r from-orange-600 to-teal-600 hover:from-orange-700 hover:to-teal-700 text-white"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Hire with Escrow
+                </Button>
+              ) : opportunity.opportunity_type === 'internship' ? (
+                <Button 
+                  onClick={() => onPayClick?.()}
+                  className="flex-1 bg-gradient-to-r from-orange-600 to-teal-600 hover:from-orange-700 hover:to-teal-700 text-white"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Apply with Escrow
+                </Button>
+              ) : null}
+            </>
+          )}
           
           {isOwner ? (
             <div className="flex gap-2 w-full">
