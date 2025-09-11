@@ -7,9 +7,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import Logo from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import AIAssistant from '@/components/AIAssistant';
+import { useStatistics } from '@/hooks/useStatistics';
 
 const Index = () => {
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const { statistics, loading: statsLoading } = useStatistics();
 
   const featuredItems = [
     {
@@ -478,10 +480,26 @@ const Index = () => {
           
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { number: '12,847', label: 'Active Students', icon: Users },
-              { number: '3,456', label: 'Items Sold', icon: TrendingUp },
-              { number: '1,289', label: 'Jobs Posted', icon: Briefcase },
-              { number: '98.5%', label: 'Success Rate', icon: Shield }
+              { 
+                number: statsLoading ? '...' : statistics.activeStudents.toLocaleString(), 
+                label: 'Active Students', 
+                icon: Users 
+              },
+              { 
+                number: statsLoading ? '...' : statistics.itemsSold.toLocaleString(), 
+                label: 'Items Sold', 
+                icon: TrendingUp 
+              },
+              { 
+                number: statsLoading ? '...' : statistics.jobsPosted.toLocaleString(), 
+                label: 'Jobs Posted', 
+                icon: Briefcase 
+              },
+              { 
+                number: statsLoading ? '...' : `${statistics.successRate.toFixed(1)}%`, 
+                label: 'Success Rate', 
+                icon: Shield 
+              }
             ].map((stat, index) => (
               <div key={index} className="text-center group">
                 <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
