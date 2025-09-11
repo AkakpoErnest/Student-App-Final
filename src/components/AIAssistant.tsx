@@ -106,6 +106,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     const apiKey = import.meta.env.VITE_CLAUDE_API_KEY;
     console.log('Environment API Key:', apiKey ? 'Loaded' : 'Not loaded');
     console.log('API Key preview:', apiKey?.substring(0, 20) + '...');
+    console.log('All environment variables:', import.meta.env);
 
     try {
       console.log('Sending message to Claude API:', userMessage);
@@ -279,6 +280,22 @@ Try asking about any of these topics, or visit our Help section for more detaile
     setInputMessage(question);
   };
 
+  const testAPI = async () => {
+    console.log('Testing API connection...');
+    const apiKey = import.meta.env.VITE_CLAUDE_API_KEY;
+    console.log('API Key available:', !!apiKey);
+    console.log('API Key starts with sk-ant:', apiKey?.startsWith('sk-ant-'));
+    
+    try {
+      const result = await claudeAPI.getQuickResponse('Hello, this is a test message');
+      console.log('API Test Result:', result);
+      toast.success('API connection successful!');
+    } catch (error) {
+      console.error('API Test Error:', error);
+      toast.error('API connection failed: ' + (error as Error).message);
+    }
+  };
+
   if (!isOpen) {
     return (
       <Button
@@ -388,6 +405,16 @@ Try asking about any of these topics, or visit our Help section for more detaile
                       {question}
                     </Button>
                   ))}
+                </div>
+                <div className="mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-6 px-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onClick={testAPI}
+                  >
+                    Test API Connection
+                  </Button>
                 </div>
               </div>
             )}
