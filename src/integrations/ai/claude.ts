@@ -25,18 +25,8 @@ class ClaudeAPI {
   private model: string = 'claude-3-haiku-20240307'; // Fast and cost-effective model
 
   constructor() {
-<<<<<<< HEAD
-    // Use environment variable only
+    // Use Vite runtime environment variable only (browser-safe)
     this.apiKey = import.meta.env.VITE_CLAUDE_API_KEY || '';
-=======
-    // Try multiple sources for API key
-    this.apiKey = import.meta.env.VITE_CLAUDE_API_KEY || 
-                  process.env.VITE_CLAUDE_API_KEY || '';
-    
-    console.log('Claude API Key loaded:', this.apiKey ? 'Yes' : 'No');
-    console.log('API Key preview:', this.apiKey?.substring(0, 20) + '...');
-    console.log('Environment variables:', import.meta.env);
->>>>>>> 223c1e1f10e8df8313f75135b139094468c5ee81
     
     if (!this.apiKey) {
       console.warn('Claude API key not found. Please set VITE_CLAUDE_API_KEY in your environment variables.');
@@ -54,7 +44,7 @@ class ClaudeAPI {
         throw new Error('Invalid Claude API key. Please check your environment variables.');
       }
 
-      console.log('Making request to Claude API with key:', this.apiKey.substring(0, 20) + '...');
+      // Do not log API keys in production
 
       const response = await fetch(this.baseUrl, {
         method: 'POST',
@@ -86,7 +76,7 @@ class ClaudeAPI {
       }
 
       const data = await response.json();
-      console.log('Claude API success response:', data);
+      // Basic success path
       return {
         content: data.content[0]?.text || 'No response generated'
       };
@@ -177,8 +167,6 @@ export const claudeAPI = new ClaudeAPI();
 // Test function for debugging
 export const testClaudeAPI = async () => {
   console.log('Testing Claude API...');
-  console.log('API Key loaded:', claudeAPI['apiKey'] ? 'Yes' : 'No');
-  console.log('API Key preview:', claudeAPI['apiKey']?.substring(0, 20) + '...');
   
   try {
     const result = await claudeAPI.getQuickResponse('Hello, test message');
