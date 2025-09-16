@@ -4,7 +4,129 @@
 
 StuFind is Ghana's premier student marketplace platform, revolutionizing how university students buy, sell, and discover opportunities. Built with cutting-edge blockchain technology, StuFind provides a secure, transparent, and efficient marketplace ecosystem for Ghanaian university students.
 
-## 🎯 About StuFind
+## Getting Started (Setup & Run)
+
+Follow these steps to run the project locally. Keep it simple: install deps, set env vars, run the app, and (optionally) deploy contracts.
+
+### Prerequisites
+- Node.js 18 or 20
+- npm (or yarn/pnpm) and Git
+- MetaMask (for blockchain interactions)
+
+### 1) Install dependencies
+```bash
+npm install
+```
+
+### 2) Environment variables
+Create a `.env` (for Hardhat) and a `.env.local` (for Vite) in the project root.
+
+Minimal local dev (Frontend only):
+```ini
+# .env.local (used by Vite at runtime)
+VITE_CLAUDE_API_KEY=
+VITE_WHATSAPP_WEBHOOK_VERIFY_TOKEN=stufind_verify_token
+VITE_WHATSAPP_ACCESS_TOKEN=
+VITE_WHATSAPP_PHONE_NUMBER_ID=
+
+# Demo MoMo API keys (logic is simulated but checks for presence)
+VITE_MTN_MOMO_API_KEY=dummy
+VITE_VODAFONE_MOMO_API_KEY=dummy
+VITE_AIRTEL_MOMO_API_KEY=dummy
+```
+
+Optional (Contracts, verification):
+```ini
+# .env (used by Hardhat)
+PRIVATE_KEY=
+BASESCAN_API_KEY=
+```
+
+Notes:
+- Firebase is pre-configured in `src/integrations/firebase/config.ts` for demo. No env needed for local preview.
+- Claude, WhatsApp, and MoMo integrations are optional in local dev; leave blank to disable, or provide real keys to test.
+
+### 3) Run the app (frontend)
+```bash
+npm run dev
+```
+Open the printed localhost URL.
+
+Build and preview:
+```bash
+npm run build
+npm run preview
+```
+
+### 4) Smart contracts (optional)
+Only needed if you want to deploy and use the on-chain escrow locally or on Base.
+
+Compile:
+```bash
+npm run compile
+```
+
+Deploy to local Hardhat node:
+```bash
+# In one terminal (optional): npx hardhat node
+npm run deploy:local
+```
+
+Deploy to Base Sepolia (requires funded key):
+```bash
+npm run deploy:base-sepolia
+```
+
+After deployment, update contract addresses in `src/integrations/blockchain/client.ts`:
+```ts
+// Replace placeholders with your deployed addresses
+const STUFIND_TOKEN_ADDRESS = '0x...';
+const ESCROW_CONTRACT_ADDRESS = '0x...';
+```
+
+MetaMask network:
+- Local: connect to Hardhat (chainId 1337)
+- Testnet: Base Sepolia (chainId 84532)
+- Mainnet: Base (chainId 8453)
+
+### 5) WhatsApp webhook (serverless)
+The webhook handler is designed for a serverless environment (e.g., Vercel/Netlify).
+
+Steps:
+- Set env vars on your hosting platform:
+  - `VITE_WHATSAPP_WEBHOOK_VERIFY_TOKEN`
+  - `VITE_WHATSAPP_ACCESS_TOKEN`
+  - `VITE_WHATSAPP_PHONE_NUMBER_ID`
+- Deploy the app. Use your deployment URL as the webhook endpoint (e.g., `https://<your-app>/api/whatsapp/webhook`).
+- In Meta’s WhatsApp Business settings, set the webhook verify token to match the value you configured.
+
+For local testing, you can expose your dev server with a tunneling tool (e.g., `ngrok`) and point the WhatsApp webhook to the tunnel URL.
+
+### 6) Mobile Money (MoMo) — demo mode
+The current MoMo integration simulates flows and requires the demo keys to pass basic checks. Use Ghana test numbers that include `0244` or `0555` to simulate success.
+
+### Troubleshooting
+- Wallet not connecting or wrong network: ensure MetaMask is on Base (8453) or Base Sepolia (84532); or use the Hardhat network for local.
+- WhatsApp webhook 403: verify your verify token and that the `/api/whatsapp/webhook` endpoint is reachable from the internet.
+ 
+### Offline usage
+
+What works offline:
+- UI loads from `dist/` with client-side navigation and theming
+- Forms and non-network interactions
+- MoMo in demo mode (use numbers containing `0244` or `0555`)
+
+What does not work offline:
+- Firebase (Auth/Firestore/Storage): login, listings, remote images
+- WhatsApp bot/webhook: requires Meta API and public URL
+- Claude AI assistant: requires Anthropic API
+- Blockchain to Base/Base Sepolia: RPC calls and transactions
+- Any remote assets not bundled into `dist/`
+
+Optional: offline blockchain
+- Run a local Hardhat node and deploy contracts locally
+- Update provider and contract addresses in `src/integrations/blockchain/client.ts` to point to localhost
+## About StuFind
 
 StuFind transforms the student experience by creating a comprehensive marketplace ecosystem that connects Ghanaian university students across major institutions. Our platform leverages blockchain technology to ensure secure, transparent, and efficient transactions.
 
@@ -13,8 +135,8 @@ StuFind transforms the student experience by creating a comprehensive marketplac
 - **💼 Career Opportunities**: Dedicated job board featuring internships, part-time positions, and freelance opportunities
 - **🎓 Academic Services**: Platform for offering and hiring tutoring, project assistance, and academic support services
 - **💰 Mobile Money Integration**: Seamless payment processing through Ghana's leading mobile money providers
-- **📱 WhatsApp Commerce**: Convenient buying and selling through WhatsApp integration
-- **🏫 University Verification**: Robust verification system ensuring trust and security among student users
+- **WhatsApp Commerce**: Convenient buying and selling through WhatsApp integration
+- **University Verification**: Robust verification system ensuring trust and security among student users
 - **🪙 Token Economy**: Blockchain-powered reward system where students earn tokens for engagement and transactions
 
 ### Supported Universities
@@ -32,11 +154,11 @@ StuFind transforms the student experience by creating a comprehensive marketplac
 StuFind is built on a robust blockchain foundation that ensures security, transparency, and efficiency in all transactions.
 
 ### Blockchain Features
-- **🔐 Smart Contracts**: Automated transaction execution with predefined conditions
-- **📊 Transparent Ledger**: All transactions recorded on immutable blockchain
-- **🛡️ Enhanced Security**: Cryptographic protection against fraud and tampering
-- **⚡ Fast Transactions**: Optimized blockchain for quick payment processing
-- **🌍 Decentralized**: No single point of failure, ensuring platform reliability
+- **Smart Contracts**: Automated transaction execution with predefined conditions
+- **Transparent Ledger**: All transactions recorded on immutable blockchain
+- **Enhanced Security**: Cryptographic protection against fraud and tampering
+- **Fast Transactions**: Optimized blockchain for quick payment processing
+- **Decentralized**: No single point of failure, ensuring platform reliability
 - **🪙 Token Economy**: Native token system for rewards and platform interactions
 
 ### Blockchain Benefits for Students
@@ -46,7 +168,7 @@ StuFind is built on a robust blockchain foundation that ensures security, transp
 - **Data Ownership**: Students maintain control over their personal data
 - **Future-Proof**: Built on technology that will define the future of commerce
 
-## 🛠️ Technical Architecture
+## Technical Architecture
 
 ### Modern Web Technologies
 - **React 18** with TypeScript for robust, type-safe development
@@ -76,7 +198,7 @@ StuFind is built on a robust blockchain foundation that ensures security, transp
 - **AI-Powered Bot Service** for intelligent customer support
 - **Real-time Analytics Dashboard** with blockchain transaction insights
 
-## 📱 Application Features
+## Application Features
 
 ### User Experience
 - **Modern Interface**: Clean, intuitive design optimized for mobile and desktop
@@ -106,7 +228,7 @@ StuFind is built on a robust blockchain foundation that ensures security, transp
 - **Referral Rewards**: Earn tokens for inviting friends to the platform
 - **Achievement System**: Unlock badges and rewards for platform engagement
 
-## 🌐 Platform Capabilities
+## Platform Capabilities
 
 ### For Students
 - **Sell Items**: List textbooks, electronics, clothing, and other items
@@ -127,7 +249,7 @@ StuFind is built on a robust blockchain foundation that ensures security, transp
 - **Brand Awareness**: Marketing opportunities within student communities
 - **Partnership Opportunities**: Collaborate with universities and students
 
-## 💳 Payment System
+## Payment System
 
 ### Mobile Money Integration
 - **MTN Mobile Money**: Ghana's largest mobile payment provider
@@ -143,7 +265,7 @@ StuFind is built on a robust blockchain foundation that ensures security, transp
 - **Low Fees**: Reduced transaction costs through blockchain
 - **Instant Settlement**: Immediate payment confirmation
 
-## 🤖 WhatsApp Integration
+## WhatsApp Integration
 
 ### Automated Commerce
 - **Order Processing**: Complete transactions through WhatsApp
@@ -159,7 +281,7 @@ StuFind is built on a robust blockchain foundation that ensures security, transp
 - **Price Negotiation**: Facilitate price discussions between buyers and sellers
 - **Delivery Coordination**: Help arrange item pickup and delivery
 
-## 📊 Analytics & Insights
+## Analytics & Insights
 
 ### User Analytics
 - **Transaction Tracking**: Monitor buying and selling patterns
@@ -173,7 +295,7 @@ StuFind is built on a robust blockchain foundation that ensures security, transp
 - **User Demographics**: Understand student population and preferences
 - **Performance Optimization**: Data-driven platform improvements
 
-## 🔒 Security & Privacy
+## Security & Privacy
 
 ### Data Protection
 - **GDPR Compliance**: European data protection standards
@@ -189,7 +311,7 @@ StuFind is built on a robust blockchain foundation that ensures security, transp
 - **Identity Verification**: Robust user authentication
 - **Dispute Resolution**: Fair conflict resolution mechanisms
 
-## 🌍 Impact & Vision
+## Impact & Vision
 
 ### Student Empowerment
 - **Economic Independence**: Students earn money through the platform
@@ -212,7 +334,7 @@ StuFind is built on a robust blockchain foundation that ensures security, transp
 - **Youth Employment**: Create job opportunities for young people
 - **Technology Adoption**: Promote blockchain and digital payment adoption
 
-## 🚀 Future Roadmap
+## Future Roadmap
 
 ### Upcoming Features
 - **Mobile App**: Native iOS and Android applications
