@@ -1,119 +1,121 @@
-// API Test Page for Debugging
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { testClaudeAPI } from '@/integrations/ai/claude';
+import { claudeAPI, testClaudeAPI } from '@/integrations/ai/claude';
 
 const APITest: React.FC = () => {
-  const [testResult, setTestResult] = useState<string>('');
+  const [testMessage, setTestMessage] = useState('Hello, this is a test message');
+  const [result, setResult] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKey, setApiKey] = useState<string>('');
+  const [apiKeyStatus, setApiKeyStatus] = useState<string>('');
 
-  const handleTestAPI = async () => {
+  const runTest = async () => {
     setIsLoading(true);
-    setTestResult('Testing...');
+    setResult('');
     
     try {
-      const result = await testClaudeAPI();
-      setTestResult(JSON.stringify(result, null, 2));
+      // Check API key
+      const apiKey = import.meta.env.VITE_CLAUDE_API_KEY;
+      setApiKeyStatus(apiKey ? `Loaded: ${apiKey.substring(0, 20)}...` : 'Not loaded');
+      
+      // Test API
+      const response = await claudeAPI.getQuickResponse(testMessage);
+      setResult(response);
     } catch (error) {
-      setTestResult(`Error: ${error}`);
+      setResult(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const checkAPIKey = () => {
-    const envKey = import.meta.env.VITE_CLAUDE_API_KEY;
-    setApiKey(envKey || 'Not found');
+  const runGlobalTest = async () => {
+    setIsLoading(true);
+    setResult('');
+    
+    try {
+      const response = await testClaudeAPI();
+      setResult(typeof response === 'string' ? response : JSON.stringify(response));
+    } catch (error) {
+      setResult(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-          Claude API Test
-        </h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-white dark:bg-gray-800">
-            <CardHeader>
-              <CardTitle>API Key Status</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button onClick={checkAPIKey} variant="outline">
-                Check API Key
-              </Button>
-              <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded">
-                <code className="text-sm break-all">
-                  {apiKey || 'Click "Check API Key" to see status'}
-                </code>
-              </div>
-              <Badge variant={apiKey.startsWith('sk-ant-') ? 'default' : 'destructive'}>
-                {apiKey.startsWith('sk-ant-') ? 'Valid Format' : 'Invalid/Not Found'}
-              </Badge>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white dark:bg-gray-800">
-            <CardHeader>
-              <CardTitle>API Test</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                onClick={handleTestAPI} 
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading ? 'Testing...' : 'Test Claude API'}
-              </Button>
-              <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded max-h-64 overflow-auto">
-                <pre className="text-sm whitespace-pre-wrap">
-                  {testResult || 'Click "Test Claude API" to see results'}
-                </pre>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="mt-6 bg-white dark:bg-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <Card>
           <CardHeader>
-            <CardTitle>Environment Variables</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">
+              Claude API Test
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            {/* Environment Info */}
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>VITE_CLAUDE_API_KEY:</span>
-                <Badge variant={import.meta.env.VITE_CLAUDE_API_KEY ? 'default' : 'destructive'}>
-                  {import.meta.env.VITE_CLAUDE_API_KEY ? 'Set' : 'Not Set'}
-                </Badge>
-              </div>
-              <div className="flex justify-between">
-                <span>NODE_ENV:</span>
-                <Badge>{import.meta.env.NODE_ENV}</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span>MODE:</span>
-                <Badge>{import.meta.env.MODE}</Badge>
+              <h3 className="text-lg font-semibold">Environment Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Badge variant="outline">API Key Status</Badge>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {apiKeyStatus || 'Not checked yet'}
+                  </p>
+                </div>
+                <div>
+                  <Badge variant="outline">Environment</Badge>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {import.meta.env.MODE}
+                  </p>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card className="mt-6 bg-white dark:bg-gray-800">
-          <CardHeader>
-            <CardTitle>Debug Instructions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ol className="list-decimal list-inside space-y-2 text-sm">
-              <li>Check if API key is loaded correctly</li>
-              <li>Test the API connection</li>
-              <li>Check browser console for errors</li>
-              <li>Verify the .env file is in the project root</li>
-              <li>Restart the development server after .env changes</li>
-            </ol>
+            {/* Test Input */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Test Message</h3>
+              <div className="flex gap-2">
+                <Input
+                  value={testMessage}
+                  onChange={(e) => setTestMessage(e.target.value)}
+                  placeholder="Enter test message..."
+                  className="flex-1"
+                />
+                <Button onClick={runTest} disabled={isLoading}>
+                  {isLoading ? 'Testing...' : 'Test API'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Global Test */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Global Test Function</h3>
+              <Button onClick={runGlobalTest} disabled={isLoading} variant="outline">
+                {isLoading ? 'Testing...' : 'Run Global Test'}
+              </Button>
+            </div>
+
+            {/* Results */}
+            {result && (
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Result</h3>
+                <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <pre className="whitespace-pre-wrap text-sm">{result}</pre>
+                </div>
+              </div>
+            )}
+
+            {/* Environment Variables Debug */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">All Environment Variables</h3>
+              <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <pre className="text-xs overflow-auto">
+                  {JSON.stringify(import.meta.env, null, 2)}
+                </pre>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

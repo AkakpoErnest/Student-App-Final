@@ -107,6 +107,11 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     console.log('Environment API Key:', apiKey ? 'Loaded' : 'Not loaded');
     console.log('API Key preview:', apiKey?.substring(0, 20) + '...');
     console.log('All environment variables:', import.meta.env);
+<<<<<<< HEAD
+=======
+    console.log('Current URL:', window.location.href);
+    console.log('User message:', userMessage);
+>>>>>>> 223c1e1f10e8df8313f75135b139094468c5ee81
 
     try {
       console.log('Sending message to Claude API:', userMessage);

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Link } from 'react-router-dom';
 import { 
   Shield, 
   Clock, 
@@ -29,6 +30,13 @@ const EscrowManager = ({ user }: EscrowManagerProps) => {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Escrow System</h2>
         <p className="text-gray-600 dark:text-gray-400">Secure payment protection for all transactions</p>
+        <div className="mt-4">
+          <Button asChild className="bg-gradient-to-r from-orange-600 to-teal-600 hover:from-orange-700 hover:to-teal-700">
+            <Link to="/momo-test">
+              Test Mobile Money Payments
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Overview Stats */}

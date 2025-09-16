@@ -25,8 +25,18 @@ class ClaudeAPI {
   private model: string = 'claude-3-haiku-20240307'; // Fast and cost-effective model
 
   constructor() {
+<<<<<<< HEAD
     // Use environment variable only
     this.apiKey = import.meta.env.VITE_CLAUDE_API_KEY || '';
+=======
+    // Try multiple sources for API key
+    this.apiKey = import.meta.env.VITE_CLAUDE_API_KEY || 
+                  process.env.VITE_CLAUDE_API_KEY || '';
+    
+    console.log('Claude API Key loaded:', this.apiKey ? 'Yes' : 'No');
+    console.log('API Key preview:', this.apiKey?.substring(0, 20) + '...');
+    console.log('Environment variables:', import.meta.env);
+>>>>>>> 223c1e1f10e8df8313f75135b139094468c5ee81
     
     if (!this.apiKey) {
       console.warn('Claude API key not found. Please set VITE_CLAUDE_API_KEY in your environment variables.');

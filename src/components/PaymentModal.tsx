@@ -10,6 +10,7 @@ import { CreditCard, Smartphone, Coins, Wallet, AlertCircle } from 'lucide-react
 import { getCurrentUser, db } from '@/integrations/firebase/client';
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { blockchainClient } from '@/integrations/blockchain/client';
+import { paymentService } from '@/integrations/payment/momo';
 import { toast } from 'sonner';
 
 interface Opportunity {
@@ -30,6 +31,7 @@ const PaymentModal = ({ opportunity, onClose, onSuccess }: PaymentModalProps) =>
   const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'momo' | 'usdc'>('credit_card');
   const [walletAddress, setWalletAddress] = useState('');
   const [momoNumber, setMomoNumber] = useState('');
+  const [momoProvider, setMomoProvider] = useState<'mtn' | 'vodafone' | 'airtel'>('mtn');
   const [walletConnected, setWalletConnected] = useState(false);
   const [escrowId, setEscrowId] = useState<string | null>(null);
 
@@ -93,8 +95,27 @@ const PaymentModal = ({ opportunity, onClose, onSuccess }: PaymentModalProps) =>
           break;
         
         case 'momo':
-          // In real implementation, integrate with mobile money API
-          updateData.momo_reference = `momo_${Date.now()}`;
+          // Mobile Money payment with real API integration
+          if (!momoNumber.trim()) {
+            throw new Error('Please enter your phone number');
+          }
+          
+          const momoReference = `momo_${Date.now()}`;
+          const momoResponse = await paymentService.initiateMoMoPayment(
+            momoProvider,
+            opportunity.price,
+            momoNumber,
+            momoReference,
+            `Payment for ${opportunity.title}`
+          );
+          
+          if (!momoResponse.success) {
+            throw new Error(momoResponse.error || 'Mobile Money payment failed');
+          }
+          
+          updateData.momo_reference = momoReference;
+          updateData.momo_transaction_id = momoResponse.transaction_id;
+          updateData.momo_provider = momoProvider;
           break;
         
         case 'usdc':
@@ -199,16 +220,56 @@ const PaymentModal = ({ opportunity, onClose, onSuccess }: PaymentModalProps) =>
             </TabsContent>
 
             <TabsContent value="momo" className="space-y-4">
+              {/* Provider Selection */}
+              <div className="space-y-3">
+                <Label className="text-base font-medium">Select Provider</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { value: 'mtn', label: 'MTN MoMo', color: 'bg-yellow-500' },
+                    { value: 'vodafone', label: 'Vodafone', color: 'bg-red-500' },
+                    { value: 'airtel', label: 'AirtelTigo', color: 'bg-red-600' }
+                  ].map((provider) => (
+                    <div
+                      key={provider.value}
+                      className={`p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                        momoProvider === provider.value
+                          ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      }`}
+                      onClick={() => setMomoProvider(provider.value as any)}
+                    >
+                      <div className="text-center">
+                        <div className={`w-8 h-8 mx-auto mb-2 rounded-full ${provider.color}`}></div>
+                        <span className="text-sm font-medium">{provider.label}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Phone Number Input */}
               <div className="space-y-2">
                 <Label>Mobile Money Number</Label>
                 <Input 
-                  placeholder="+233 XX XXX XXXX"
+                  placeholder="0244 123 456"
                   value={momoNumber}
                   onChange={(e) => setMomoNumber(e.target.value)}
                 />
+                <p className="text-xs text-gray-500">Enter your Ghana phone number</p>
               </div>
+
+              {/* Payment Instructions */}
+              <div className="bg-gradient-to-r from-orange-50 to-teal-50 dark:from-orange-900/20 dark:to-teal-900/20 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
+                <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-3">Payment Instructions</h4>
+                <div className="space-y-2 text-sm">
+                  {paymentService.getPaymentInstructions(momoProvider, opportunity.price, `STU${Date.now()}`).map((instruction, index) => (
+                    <p key={index} className="text-orange-700 dark:text-orange-300">{instruction}</p>
+                  ))}
+                </div>
+              </div>
+
               <Badge className="bg-green-100 text-green-800">
-                MTN MoMo & AirtelTigo supported
+                {paymentService.getProviderDisplayName(momoProvider)} supported
               </Badge>
             </TabsContent>
 

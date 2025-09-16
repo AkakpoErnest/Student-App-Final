@@ -6,7 +6,7 @@ const BASE_CHAIN_ID = 8453;
 
 // StuFind Token Contract (placeholder - would be deployed on Base)
 const STUFIND_TOKEN_ADDRESS = '0x...'; // Replace with actual deployed contract
-const ESCROW_CONTRACT_ADDRESS = '0x...'; // Replace with actual deployed contract
+const ESCROW_CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3'; // Deployed contract address
 
 // ABI for StuFind Token
 const STUFIND_TOKEN_ABI = [
@@ -19,21 +19,21 @@ const STUFIND_TOKEN_ABI = [
 
 // ABI for Escrow Contract
 const ESCROW_ABI = [
-  'function createEscrow(uint256 opportunityId, uint256 amount) payable returns (uint256 escrowId)',
+  'function createEscrow(uint256 opportunityId, address seller) payable returns (uint256 escrowId)',
   'function releaseFunds(uint256 escrowId) returns (bool)',
   'function refundBuyer(uint256 escrowId) returns (bool)',
-  'function getEscrow(uint256 escrowId) view returns (address buyer, address seller, uint256 amount, bool released, bool refunded)',
-  'event EscrowCreated(uint256 indexed escrowId, uint256 indexed opportunityId, address indexed buyer, uint256 amount)',
-  'event FundsReleased(uint256 indexed escrowId, address indexed seller)',
-  'event FundsRefunded(uint256 indexed escrowId, address indexed buyer)'
+  'function getEscrow(uint256 escrowId) view returns (address buyer, address seller, uint256 amount, bool released, bool refunded, uint256 createdAt, uint256 opportunityId)',
+  'event EscrowCreated(uint256 indexed escrowId, uint256 indexed opportunityId, address indexed buyer, address seller, uint256 amount)',
+  'event FundsReleased(uint256 indexed escrowId, address indexed seller, uint256 amount)',
+  'event FundsRefunded(uint256 indexed escrowId, address indexed buyer, uint256 amount)'
 ];
 
 class BlockchainClient {
-  private provider: ethers.providers.JsonRpcProvider;
-  private signer: ethers.Signer | null = null;
+  private provider: ethers.JsonRpcProvider;
+  private signer: ethers.Wallet | null = null;
 
   constructor() {
-    this.provider = new ethers.providers.JsonRpcProvider(BASE_RPC_URL);
+    this.provider = new ethers.JsonRpcProvider(BASE_RPC_URL);
   }
 
   // Connect wallet
@@ -41,7 +41,8 @@ class BlockchainClient {
     try {
       if (typeof window.ethereum !== 'undefined') {
         await window.ethereum.request({ method: 'eth_requestAccounts' });
-        this.signer = this.provider.getSigner();
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        this.signer = await provider.getSigner();
         const address = await this.signer.getAddress();
         return address;
       } else {
@@ -62,7 +63,7 @@ class BlockchainClient {
         this.provider
       );
       const balance = await tokenContract.balanceOf(userAddress);
-      return parseFloat(ethers.utils.formatEther(balance));
+      return parseFloat(ethers.formatEther(balance));
     } catch (error) {
       console.error('Error getting token balance:', error);
       return 0;
@@ -82,18 +83,27 @@ class BlockchainClient {
         this.signer
       );
 
-      const amountWei = ethers.utils.parseEther(amount.toString());
+      const amountWei = ethers.parseEther(amount.toString());
       
-      const tx = await escrowContract.createEscrow(opportunityId, amountWei, {
+      const tx = await escrowContract.createEscrow(opportunityId, sellerAddress, {
         value: amountWei
       });
 
       const receipt = await tx.wait();
       
       // Find the EscrowCreated event
-      const event = receipt.events?.find((e: any) => e.event === 'EscrowCreated');
+      const event = receipt.logs?.find((log: any) => {
+        try {
+          const parsed = escrowContract.interface.parseLog(log);
+          return parsed?.name === 'EscrowCreated';
+        } catch {
+          return false;
+        }
+      });
+      
       if (event) {
-        return event.args.escrowId.toString();
+        const parsed = escrowContract.interface.parseLog(event);
+        return parsed?.args.escrowId.toString();
       }
       
       return null;
@@ -160,9 +170,11 @@ class BlockchainClient {
       return {
         buyer: escrow.buyer,
         seller: escrow.seller,
-        amount: parseFloat(ethers.utils.formatEther(escrow.amount)),
+        amount: parseFloat(ethers.formatEther(escrow.amount)),
         released: escrow.released,
-        refunded: escrow.refunded
+        refunded: escrow.refunded,
+        createdAt: escrow.createdAt,
+        opportunityId: escrow.opportunityId
       };
     } catch (error) {
       console.error('Error getting escrow details:', error);

@@ -1,69 +1,89 @@
-# Firebase Setup Guide
+# 🔥 Firebase Database Setup Guide
 
-This app has been migrated from Supabase to Firebase. Follow these steps to set up Firebase:
+## 🚨 **Database Issue Detected**
 
-## 1. Create a Firebase Project
+Your Firebase database appears to have expired or there's a configuration issue. Let's fix this step by step!
 
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Click "Create a project" or select an existing project
-3. Follow the setup wizard
+## 🚀 **Quick Fix - New Firebase Project**
 
-## 2. Enable Authentication
+### **Step 1: Create New Firebase Project**
 
-1. In your Firebase project, go to "Authentication" in the left sidebar
-2. Click "Get started"
-3. Go to "Sign-in method" tab
-4. Enable "Email/Password" authentication
-5. Optionally enable other providers as needed
+1. **Go to Firebase Console:**
+   - Visit: https://console.firebase.google.com/
+   - Click **"Create a project"** or **"Add project"**
 
-## 3. Enable Firestore Database
+2. **Project Setup:**
+   - **Project name:** `stufind-app` (or any name you prefer)
+   - **Google Analytics:** Enable (recommended)
+   - **Analytics account:** Create new or use existing
+   - Click **"Create project"**
 
-1. Go to "Firestore Database" in the left sidebar
-2. Click "Create database"
-3. Choose "Start in test mode" for development
-4. Select a location close to your users
+### **Step 2: Enable Required Services**
 
-## 4. Enable Storage (Optional)
+#### **A. Authentication:**
+1. In Firebase Console → **Authentication** → **Get started**
+2. Go to **Sign-in method** tab
+3. Enable **Email/Password** authentication
+4. Click **Save**
 
-1. Go to "Storage" in the left sidebar
-2. Click "Get started"
-3. Choose "Start in test mode" for development
-4. Select a location
+#### **B. Firestore Database:**
+1. In Firebase Console → **Firestore Database** → **Create database**
+2. Choose **"Start in test mode"** (for now)
+3. Select **location** (choose closest to Ghana: `europe-west1`)
+4. Click **"Done"**
 
-## 5. Get Configuration
+#### **C. Storage:**
+1. In Firebase Console → **Storage** → **Get started**
+2. Choose **"Start in test mode"** (for now)
+3. Select **location** (same as Firestore)
+4. Click **"Done"**
 
-1. Click the gear icon next to "Project Overview"
-2. Select "Project settings"
-3. Scroll down to "Your apps" section
-4. Click the web app icon (</>) or create a new web app
-5. Copy the configuration object
+### **Step 3: Get Configuration**
 
-## 6. Update Configuration
+1. In Firebase Console → **Project Settings** (gear icon)
+2. Scroll down to **"Your apps"** section
+3. Click **"</>"** (Web app icon)
+4. **App nickname:** `StuFind Web App`
+5. **Firebase Hosting:** Don't set up (uncheck)
+6. Click **"Register app"**
+7. **Copy the config object** (it looks like this):
 
-1. Open `src/integrations/firebase/config.ts`
-2. Replace the placeholder values with your actual Firebase config:
-
-```typescript
+```javascript
 const firebaseConfig = {
-  apiKey: "your-actual-api-key",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-actual-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "your-actual-sender-id",
-  appId: "your-actual-app-id"
+  apiKey: "your-api-key",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "your-app-id"
 };
 ```
 
-## 7. Set Up Security Rules
+### **Step 4: Update Your App Configuration**
 
-### Firestore Rules
-Go to Firestore Database > Rules and update with:
+Replace the config in `src/integrations/firebase/config.ts` with your new config:
+
+```typescript
+const firebaseConfig = {
+  apiKey: "your-new-api-key",
+  authDomain: "your-new-project.firebaseapp.com",
+  projectId: "your-new-project-id",
+  storageBucket: "your-new-project.appspot.com",
+  messagingSenderId: "your-new-sender-id",
+  appId: "your-new-app-id"
+};
+```
+
+## 🛡️ **Security Rules Setup**
+
+### **Firestore Rules:**
+Go to **Firestore Database** → **Rules** and replace with:
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to read their own profile
+    // Allow users to read/write their own profile
     match /profiles/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
@@ -71,52 +91,165 @@ service cloud.firestore {
     // Allow authenticated users to read opportunities
     match /opportunities/{opportunityId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == resource.data.user_id;
+      allow write: if request.auth != null;
     }
     
-    // Allow users to manage their own tokens
-    match /user_tokens/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Allow users to manage their own claims
-    match /token_claims/{claimId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.user_id;
+    // Allow authenticated users to read/write their own escrow transactions
+    match /escrow_transactions/{transactionId} {
+      allow read, write: if request.auth != null && 
+        (resource.data.buyer_id == request.auth.uid || 
+         resource.data.seller_id == request.auth.uid);
     }
   }
 }
 ```
 
-### Storage Rules (if using storage)
-Go to Storage > Rules and update with:
+### **Storage Rules:**
+Go to **Storage** → **Rules** and replace with:
 
 ```javascript
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
+    // Allow users to upload their own avatars
+    match /avatars/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow users to upload opportunity images
+    match /opportunities/{allPaths=**} {
       allow read, write: if request.auth != null;
     }
   }
 }
 ```
 
-## 8. Test the App
+## 🧪 **Test Your Setup**
 
-1. Run `npm run dev`
-2. Try to sign up/sign in
-3. Check the browser console for any errors
-4. Verify that data is being stored in Firestore
+### **Step 1: Test Authentication**
+1. Go to your app: `http://localhost:8081`
+2. Try to **sign up** with a new account
+3. Check if user appears in **Firebase Console** → **Authentication**
 
-## Troubleshooting
+### **Step 2: Test Database**
+1. Try to **post an opportunity**
+2. Check if data appears in **Firebase Console** → **Firestore Database**
 
-- **Authentication errors**: Check that Email/Password auth is enabled
-- **Database errors**: Verify Firestore is created and rules are set
-- **CORS errors**: Check that your domain is added to authorized domains in Firebase Auth settings
+### **Step 3: Test Storage**
+1. Try to **upload an avatar**
+2. Check if file appears in **Firebase Console** → **Storage**
 
-## Migration Notes
+## 🔧 **Alternative: Use Existing Project**
 
-- User IDs now use Firebase UID instead of Supabase UUID
-- Database queries use Firestore syntax instead of Supabase
-- Authentication state management has been updated for Firebase
-- All Supabase references have been removed from the codebase
+If you want to keep using your existing project:
+
+### **Check Project Status:**
+1. Go to **Firebase Console**
+2. Check if project is **active** and **billing** is set up
+3. If expired, you may need to **upgrade to Blaze plan**
+
+### **Enable Billing:**
+1. Go to **Project Settings** → **Usage and billing**
+2. Click **"Upgrade to Blaze plan"**
+3. Add payment method
+4. Set **budget alerts** to avoid unexpected charges
+
+## 📊 **Database Structure**
+
+Your Firestore will have these collections:
+
+### **profiles:**
+```javascript
+{
+  id: "user-id",
+  email: "user@example.com",
+  full_name: "User Name",
+  username: "username",
+  avatar_url: "https://...",
+  verification_status: "pending",
+  tokens: 0,
+  created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: "2024-01-01T00:00:00.000Z"
+}
+```
+
+### **opportunities:**
+```javascript
+{
+  id: "opportunity-id",
+  title: "Item Title",
+  description: "Item description",
+  price: 100,
+  category: "electronics",
+  status: "active",
+  seller_id: "user-id",
+  created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: "2024-01-01T00:00:00.000Z"
+}
+```
+
+### **escrow_transactions:**
+```javascript
+{
+  id: "transaction-id",
+  opportunity_id: "opportunity-id",
+  buyer_id: "buyer-id",
+  seller_id: "seller-id",
+  amount: 100,
+  status: "pending",
+  payment_method: "momo",
+  created_at: "2024-01-01T00:00:00.000Z"
+}
+```
+
+## 🚨 **Common Issues & Solutions**
+
+### **Issue: "Firebase project not found"**
+- **Solution:** Check project ID in config
+- **Solution:** Ensure project is active in Firebase Console
+
+### **Issue: "Permission denied"**
+- **Solution:** Check Firestore rules
+- **Solution:** Ensure user is authenticated
+
+### **Issue: "Storage permission denied"**
+- **Solution:** Check Storage rules
+- **Solution:** Ensure user is authenticated
+
+### **Issue: "Quota exceeded"**
+- **Solution:** Upgrade to Blaze plan
+- **Solution:** Check usage in Firebase Console
+
+## 💰 **Pricing Information**
+
+### **Firebase Free Tier (Spark):**
+- **Firestore:** 1GB storage, 50K reads, 20K writes per day
+- **Storage:** 1GB storage, 10GB downloads per month
+- **Authentication:** Unlimited users
+- **Perfect for development and testing**
+
+### **Firebase Blaze Plan:**
+- **Pay as you go** - only pay for what you use
+- **No daily limits**
+- **Very affordable** for small to medium apps
+- **Required for production apps**
+
+## 🎉 **You're Ready!**
+
+Once you've completed these steps:
+
+1. ✅ **New Firebase project** created
+2. ✅ **Authentication** enabled
+3. ✅ **Firestore** database set up
+4. ✅ **Storage** configured
+5. ✅ **Security rules** applied
+6. ✅ **Configuration** updated
+
+Your StuFind app will have a fresh, working database! 🚀
+
+---
+
+**Need Help?** 
+- Check Firebase Console for errors
+- Test each service individually
+- Contact Firebase support if needed
