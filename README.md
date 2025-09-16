@@ -1,4 +1,4 @@
-# StuFind - Student Marketplace Platform
+# StuFind - A Blockchain Based Student Digital Marketplace Platform
 
 **Powered by Blockchain Technology**
 
