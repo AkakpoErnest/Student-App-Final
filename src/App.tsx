@@ -16,7 +16,7 @@ import PostOpportunityPage from "./pages/PostOpportunityPage";
 import WhatsAppBot from "./pages/WhatsAppBot";
 import BotTest from "./pages/BotTest";
 import APITest from "./pages/APITest";
-// MoMoTest temporarily disabled
+import MoMoTest from "./pages/MoMoTest";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +38,7 @@ const App = () => (
             <Route path="/whatsapp-bot" element={<WhatsAppBot />} />
             <Route path="/bot-test" element={<BotTest />} />
             <Route path="/api-test" element={<APITest />} />
-            {/* MoMoTest temporarily disabled */}
+            <Route path="/momo-test" element={<MoMoTest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
