@@ -54,23 +54,6 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const [emailVerifying, setEmailVerifying] = useState(false);
   const [passwordChanging, setPasswordChanging] = useState(false);
 
-  // Test function to debug Firebase Storage
-  const testFirebaseStorage = async () => {
-    try {
-      console.log('Testing Firebase Storage...');
-      const testFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
-      const { url, error } = await uploadImage(testFile, 'test/test.txt');
-      console.log('Test upload result:', { url, error });
-      if (error) {
-        toast.error('Firebase Storage test failed: ' + error.message);
-      } else {
-        toast.success('Firebase Storage is working!');
-      }
-    } catch (error: any) {
-      console.error('Firebase Storage test error:', error);
-      toast.error('Firebase Storage test error: ' + error.message);
-    }
-  };
 
   // Handle email verification
   const handleEmailVerification = async () => {
@@ -470,14 +453,6 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={avatarUploading} />
                   <UploadIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </label>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={testFirebaseStorage}
-                  className="absolute top-0 right-0 text-xs"
-                >
-                  Test Storage
-                </Button>
                 {avatarUploading && (
                   <div className="absolute inset-0 bg-white/70 dark:bg-black/70 flex items-center justify-center rounded-full">
                     <div className="animate-spin h-6 w-6 border-b-2 border-blue-600"></div>
