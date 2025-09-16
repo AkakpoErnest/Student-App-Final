@@ -154,6 +154,8 @@ export const useDashboard = () => {
           phone: null,
           wallet_address: null,
           student_id: null,
+          tokens: 20,
+          total_opportunities_posted: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
