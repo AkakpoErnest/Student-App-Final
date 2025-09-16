@@ -168,41 +168,15 @@ export const createOpportunity = async (data: any) => {
   }
 };
 
-// Storage functions
+// Storage functions (DISABLED - requires Firebase Storage paid plan)
 export const uploadImage = async (file: File, path: string) => {
-  try {
-    const storageRef = ref(storage, path);
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return { url: downloadURL, error: null };
-  } catch (error) {
-    return { url: null, error };
-  }
+  return { url: null, error: new Error('Firebase Storage requires paid plan') };
 };
 
 export const deleteImage = async (path: string) => {
-  try {
-    const storageRef = ref(storage, path);
-    await deleteObject(storageRef);
-    return { error: null };
-  } catch (error) {
-    return { error };
-  }
+  return { error: new Error('Firebase Storage requires paid plan') };
 };
 
 export const uploadAvatar = async (userId: string, file: File) => {
-  try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}.${fileExt}`;
-    const path = `avatars/${fileName}`;
-    
-    const { url, error } = await uploadImage(file, path);
-    if (error) {
-      throw error;
-    }
-    
-    return { url, error: null };
-  } catch (error) {
-    return { url: null, error };
-  }
+  return { url: null, error: new Error('Firebase Storage requires paid plan') };
 };

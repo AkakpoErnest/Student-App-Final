@@ -4,14 +4,15 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// TEMPORARY CONFIG - REPLACE WITH YOUR NEW FIREBASE PROJECT
+// NEW FIREBASE PROJECT CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyASIBshW6_g8ft1jxmeoz7ZuxJW36jkvCo",
-  authDomain: "stufind-50c62.firebaseapp.com",
-  projectId: "stufind-50c62",
-  storageBucket: "stufind-50c62.firebasestorage.app",
-  messagingSenderId: "133150022141",
-  appId: "1:133150022141:web:8869ce20b048212d3a2194"
+  apiKey: "AIzaSyDjTpMrHi357S4H6i9SEhrRLjL8nzDZOyI",
+  authDomain: "stufind-new.firebaseapp.com",
+  projectId: "stufind-new",
+  storageBucket: "stufind-new.firebasestorage.app",
+  messagingSenderId: "368812484770",
+  appId: "1:368812484770:web:4c9cd01ccd5fe00a6a8ffb",
+  measurementId: "G-2710WLNXVB"
 };
 
 // Initialize Firebase

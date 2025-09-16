@@ -77,10 +77,7 @@ const Marketplace = () => {
 
       if (error) {
         console.error('Firebase error details:', error);
-        
-        // Use sample data as fallback when Firebase has issues
-        console.log('Using sample data due to Firebase error');
-        setOpportunities(getSampleOpportunities());
+        setOpportunities([]);
         return;
       }
 
@@ -106,7 +103,7 @@ const Marketplace = () => {
         filteredOpportunities = filteredOpportunities.filter(opp => opp.university === university);
       }
 
-      setOpportunities(filteredOpportunities.length > 0 ? filteredOpportunities : getSampleOpportunities());
+      setOpportunities(filteredOpportunities);
     } catch (error: any) {
       console.error('Error fetching opportunities:', {
         error,

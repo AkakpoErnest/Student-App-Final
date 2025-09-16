@@ -17,12 +17,13 @@ import WhatsAppBot from "./pages/WhatsAppBot";
 import BotTest from "./pages/BotTest";
 import APITest from "./pages/APITest";
 import MoMoTest from "./pages/MoMoTest";
+import FirebaseTest from "./pages/FirebaseTest";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="stufind-theme">
+    <ThemeProvider defaultTheme="light" storageKey="stufind-theme">
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/bot-test" element={<BotTest />} />
             <Route path="/api-test" element={<APITest />} />
             <Route path="/momo-test" element={<MoMoTest />} />
+            <Route path="/firebase-test" element={<FirebaseTest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

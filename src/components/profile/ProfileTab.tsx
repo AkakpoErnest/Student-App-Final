@@ -54,23 +54,6 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const [emailVerifying, setEmailVerifying] = useState(false);
   const [passwordChanging, setPasswordChanging] = useState(false);
 
-  // Test function to debug Firebase Storage
-  const testFirebaseStorage = async () => {
-    try {
-      console.log('Testing Firebase Storage...');
-      const testFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
-      const { url, error } = await uploadImage(testFile, 'test/test.txt');
-      console.log('Test upload result:', { url, error });
-      if (error) {
-        toast.error('Firebase Storage test failed: ' + error.message);
-      } else {
-        toast.success('Firebase Storage is working!');
-      }
-    } catch (error: any) {
-      console.error('Firebase Storage test error:', error);
-      toast.error('Firebase Storage test error: ' + error.message);
-    }
-  };
 
   // Handle email verification
   const handleEmailVerification = async () => {
@@ -226,10 +209,15 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
+      // Check if this is the first time completing profile (give tokens)
+      const isFirstTime = !profile?.full_name && formData.fullName;
+      const currentTokens = profile?.tokens || 0;
+      
       const updateData = {
         full_name: formData.fullName,
         phone: formData.phone,
         wallet_address: formData.walletAddress,
+        tokens: isFirstTime ? currentTokens + 10 : currentTokens, // Give 10 tokens for completing profile
         updated_at: new Date().toISOString()
       };
       
@@ -238,7 +226,11 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
       // Update local profile state
       setProfile(prev => prev ? { ...prev, ...updateData } : null);
       
-      toast.success('Profile updated successfully!');
+      if (isFirstTime) {
+        toast.success('Profile updated successfully! You earned 10 tokens! 🎉');
+      } else {
+        toast.success('Profile updated successfully!');
+      }
       setEditing(false);
     } catch (error: any) {
       console.error('Error saving profile:', error);
@@ -419,15 +411,7 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                {profile?.verification_status === 'verified' ? '✓' : '⏳'}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                {profile?.verification_status === 'verified' ? 'Verified' : 'Pending'}
-              </div>
-            </div>
+          <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                 {profile?.total_opportunities_posted || 0}
@@ -436,13 +420,13 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
             </div>
             <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-700">
               <div className="text-2xl font-bold text-green-700 dark:text-green-400 mb-1">
-                {profile?.tokens || 80}
+                {profile?.tokens || 0}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Tokens</div>
             </div>
             <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-                {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Aug 2025'}
+                {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'New'}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300 font-medium">Member Since</div>
             </div>
@@ -469,14 +453,6 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={avatarUploading} />
                   <UploadIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </label>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={testFirebaseStorage}
-                  className="absolute top-0 right-0 text-xs"
-                >
-                  Test Storage
-                </Button>
                 {avatarUploading && (
                   <div className="absolute inset-0 bg-white/70 dark:bg-black/70 flex items-center justify-center rounded-full">
                     <div className="animate-spin h-6 w-6 border-b-2 border-blue-600"></div>
